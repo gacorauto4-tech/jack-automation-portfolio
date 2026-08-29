@@ -11,7 +11,7 @@
           ]
         }
       },
-      "id": "c853c815-8ef8-4f30-ab79-829beb3aaa13",
+      "id": "***-node-id-***",
       "name": "Setiap Hari Jam 9 Pagi",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
@@ -25,7 +25,7 @@
       "parameters": {
         "jsCode": "const daftarTopik = [\n  'KESELAMATAN KERJA — APAR & Kesiapsiagaan Kebakaran Gedung (jenis APAR, teknik PASS, titik penempatan, inspeksi rutin)',\n  'KEAMANAN — SOP Patroli Satpam & Serah Terima Shift (jadwal patroli, titik kontrol, buku mutasi, laporan temuan)',\n  'KESELAMATAN KERJA — Instalasi Listrik & Panel Gedung (kabel terkelupas, stop kontak bertumpuk, LOTO, panel terkunci)',\n  'KESELAMATAN KERJA — Bekerja di Ketinggian (perawatan AC, penggantian lampu, rooftop, tangga & body harness)',\n  'KESELAMATAN KERJA — Ruang Genset & Ruang Terbatas (gas buang, ventilasi, kebisingan, prosedur confined space)',\n  'KESELAMATAN KERJA — Housekeeping 5R & Pencegahan Terpeleset/Tersandung/Terjatuh (lantai basah, kabel melintang)',\n  'KESELAMATAN KERJA — Alat Pelindung Diri untuk Teknisi & Vendor (helm, sepatu safety, rompi, sarung tangan, kacamata)',\n  'KESELAMATAN KERJA — Keselamatan Lift & Prosedur Saat Terjebak di Dalam Lift (jangan panik, tombol darurat, tunggu teknisi)',\n\n  'KESEHATAN KERJA — Ergonomi & Postur Kerja di Meja Kantor (posisi duduk, tinggi monitor, sandaran, peregangan berkala)',\n  'KESEHATAN KERJA — Kesehatan Mata & Kelelahan Digital (aturan 20-20-20, pencahayaan, silau layar)',\n  'KESEHATAN KERJA — Kualitas Udara Dalam Ruangan & Perawatan HVAC (filter AC, sirkulasi udara, jamur, bau)',\n  'KESEHATAN KERJA — Kebersihan Pantry, Air Minum & Keamanan Pangan (dispenser, kulkas bersama, makanan basi)',\n  'KESEHATAN KERJA — Kesehatan Mental & Manajemen Stres Kerja (beban kerja, istirahat, tanda kelelahan, minta bantuan)',\n  'KESEHATAN KERJA — Kebisingan & Perlindungan Pendengaran di Area Mesin/Genset (ear plug, durasi paparan)',\n  'KESEHATAN KERJA — Bahan Kimia Pembersih & Sanitasi (MSDS, pelabelan, jangan mencampur, ventilasi, sarung tangan)',\n  'KESEHATAN KERJA — P3K, Kotak Obat & Penanganan Cedera Ringan/Pingsan (isi kotak P3K, langkah awal, siapa dihubungi)',\n\n  'KEAMANAN — Pemantauan CCTV & Pelaporan Anomali (blind spot, pengecekan rekaman, eskalasi temuan)',\n  'KEAMANAN — Pengendalian Akses Tamu, Vendor & Area Terbatas (buku tamu, kartu identitas, pendampingan, tailgating)',\n  'KEAMANAN — Pengamanan Kunci, Aset & Ruang Vital (ruang server, panel, brankas, serah terima kunci)',\n  'KEAMANAN — Kewaspadaan Orang Asing & Social Engineering (modus penipuan, vendor palsu, mengaku petugas)',\n  'KEAMANAN — Keamanan Kendaraan & Area Parkir (kunci ganda, barang berharga di kabin, pengawasan area)',\n  'KEAMANAN — Clean Desk & Keamanan Data di Lingkungan Kerja (dokumen tertinggal, layar terbuka, badge, print-an)',\n  'KEAMANAN — Tanggap Darurat & Pelaporan Insiden (rantai komando, nomor darurat, kronologi laporan yang benar)',\n  'KEAMANAN — Keselamatan Berkendara & Perjalanan Dinas (kelelahan menyetir, helm, sabuk pengaman, cek kendaraan)'\n];\n\nconst daftarGaya = [\n  'CHECKLIST HARIAN — sajikan sebagai daftar tindakan konkret yang bisa langsung dicek dan dikerjakan hari ini.',\n  'STUDI KASUS SINGKAT — hook berisi satu skenario insiden yang masuk akal di gedung perkantoran; kelima poin berisi pelajaran yang ditarik darinya.',\n  'MITOS vs FAKTA — tiap poin membongkar satu anggapan keliru yang umum, lalu meluruskannya.',\n  'DO & DON\\'T — tiap poin tegas menyatakan apa yang harus dipastikan atau apa yang harus dihindari.',\n  'DAMPAK & KONSEKUENSI — tiap poin menjelaskan akibat nyata bila diabaikan, dari sudut pandang yang berbeda-beda.'\n];\n\nconst cfg = $('Konfigurasi').first().json;\nconst now = new Date();\nconst startOfYear = new Date(now.getFullYear(), 0, 0);\nconst dayOfYear = Math.floor((now - startOfYear) / 86400000);\n\nconst ov = cfg.overrideIndex;\nconst pakaiOverride = ov !== '' && ov !== null && ov !== undefined && !isNaN(Number(ov));\nconst idx = pakaiOverride ? Number(ov) : dayOfYear;\n\nconst topikTerpilih = daftarTopik[idx % daftarTopik.length];\nconst gayaTerpilih = daftarGaya[idx % daftarGaya.length];\nconst pilar = topikTerpilih.split('—')[0].trim();\nconst labelGaya = gayaTerpilih.split('—')[0].trim();\nconst tanggalHariIni = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nreturn [{ json: { topikTerpilih, gayaTerpilih, pilar, labelGaya, tanggalHariIni, idx, pakaiOverride } }];"
       },
-      "id": "25dcc759-6ad7-4945-b8c5-6570375b2231",
+      "id": "***-node-id-***",
       "name": "Pilih Topik Hari Ini",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -58,7 +58,7 @@
           "temperature": 0.9
         }
       },
-      "id": "2bdbd9d4-a156-4658-a738-474169439335",
+      "id": "***-node-id-***",
       "name": "Generate Materi Reminder",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.3,
@@ -88,7 +88,7 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "6e3b6c16-59ed-4542-b40a-edadbd6e2058",
+      "id": "***-node-id-***",
       "name": "Parse Materi JSON",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -114,7 +114,7 @@
           "timeout": 60000
         }
       },
-      "id": "0dfb0122-343a-40a8-80a5-8d94f5f9e3ac",
+      "id": "***-node-id-***",
       "name": "Kirim Reminder ke WhatsApp Grup",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
@@ -136,7 +136,7 @@
         "width": 470,
         "color": 4
       },
-      "id": "f1c4970b-8ebe-4578-83c3-f8c7f1b466d3",
+      "id": "***-node-id-***",
       "name": "Sticky Note 12c6e21f",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -166,7 +166,7 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "f97d3c4b-0ea5-4a11-a7c7-722f06c47714",
+      "id": "***-node-id-***",
       "name": "Konfigurasi",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -180,7 +180,7 @@
       "parameters": {
         "jsCode": "const m = $('Parse Materi JSON').first().json.materi;\nconst info = $('Pilih Topik Hari Ini').first().json;\nconst cfg = $('Konfigurasi').first().json;\n\nconst ikonPilar = {\n  'KESELAMATAN KERJA': '🦺',\n  'KESEHATAN KERJA': '🩺',\n  'KEAMANAN': '🛡️'\n};\n\nconst ikonPoin = {\n  'CHECKLIST HARIAN': '☑️',\n  'STUDI KASUS SINGKAT': '•',\n  'MITOS vs FAKTA': '🔎',\n  \"DO & DON'T\": '•',\n  'DAMPAK & KONSEKUENSI': '⚠️'\n};\n\nconst rapiGaya = (s) => s.toLowerCase().replace(/(^|\\s)\\S/g, (c) => c.toUpperCase());\n\nconst b = ikonPoin[info.labelGaya] || '•';\nconst poin = (m.poin || []).map((p) => b + '  ' + p).join('\\n\\n');\n\nconst pesanFinal =\n  (ikonPilar[info.pilar] || '📌') + ' *' + info.pilar + '*  ·  ' + rapiGaya(info.labelGaya) + '\\n' +\n  info.tanggalHariIni + '\\n\\n' +\n  '*' + m.judul + '*\\n' +\n  m.hook + '\\n\\n' +\n  poin + '\\n\\n' +\n  '📌 ' + m.aksi;\n\nreturn [{ json: { targetGrup: cfg.targetGrup, pesanFinal } }];"
       },
-      "id": "570fff3b-15c9-48f8-89d7-cf2c06a7d9e6",
+      "id": "***-node-id-***",
       "name": "Susun Pesan",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -199,7 +199,7 @@
         800,
         592
       ],
-      "id": "93dc23b4-03aa-428f-8c34-c98cd38ea902",
+      "id": "***-node-id-***",
       "name": "NVIDIA Nemotron Chat Model",
       "credentials": {
         "nvidiaApi": {

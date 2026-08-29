@@ -18,7 +18,7 @@
         3552,
         976
       ],
-      "id": "a6bc8f5e-6514-45ff-aa38-bae447ba043d",
+      "id": "***-node-id-***",
       "name": "Ada Foto?"
     },
     {
@@ -36,7 +36,7 @@
         4048,
         816
       ],
-      "id": "dba69eb5-235b-4245-a063-b5b1f4c84bdd",
+      "id": "***-node-id-***",
       "name": "AI Agent: Baca Foto",
       "retryOnFail": true
     },
@@ -57,7 +57,7 @@
         4480,
         816
       ],
-      "id": "2b222837-763a-47cb-936f-faf12c8cb052",
+      "id": "***-node-id-***",
       "name": "Data Foto Valid?"
     },
     {
@@ -71,7 +71,7 @@
         4832,
         800
       ],
-      "id": "47d28824-c10e-477e-9c20-791600730d8b",
+      "id": "***-node-id-***",
       "name": "Split Out: Item Foto"
     },
     {
@@ -88,7 +88,7 @@
         3808,
         1072
       ],
-      "id": "f0d610ce-1dbc-4845-9b22-8e36029b943c",
+      "id": "***-node-id-***",
       "name": "AI Agent: Pahami Pesan"
     },
     {
@@ -102,7 +102,7 @@
         3728,
         1216
       ],
-      "id": "56055c23-ee86-4f33-81d0-905ab05b5d1c",
+      "id": "***-node-id-***",
       "name": "Groq Chat Model: Teks",
       "credentials": {
         "groqApi": {
@@ -121,7 +121,7 @@
         4096,
         1072
       ],
-      "id": "9c84bd8e-1e74-4314-808f-5cc5ceb2142a",
+      "id": "***-node-id-***",
       "name": "Code: Parse Perintah / Transaksi"
     },
     {
@@ -141,7 +141,7 @@
         4240,
         1152
       ],
-      "id": "2dcf1cb3-ea5b-4c8d-aacb-f4d24ea5796a",
+      "id": "***-node-id-***",
       "name": "Apakah Query Database?"
     },
     {
@@ -161,7 +161,7 @@
         4464,
         1184
       ],
-      "id": "fac39942-5f35-43e9-8766-48dcafa1e5ca",
+      "id": "***-node-id-***",
       "name": "Apakah Transaksi Teks?"
     },
     {
@@ -189,7 +189,7 @@
         4480,
         992
       ],
-      "id": "29215513-4f8b-4004-aa55-78b093671a53",
+      "id": "***-node-id-***",
       "name": "Google Sheets: Baca Transaksi",
       "retryOnFail": true,
       "waitBetweenTries": 2000,
@@ -210,7 +210,7 @@
         5024,
         976
       ],
-      "id": "ba4ca147-9b2e-49e4-960c-0937ac0b8e6e",
+      "id": "***-node-id-***",
       "name": "Code: Jawab Query Database"
     },
     {
@@ -336,7 +336,7 @@
         5120,
         800
       ],
-      "id": "4b928dfd-c093-49db-8bdd-3989c89db5dd",
+      "id": "***-node-id-***",
       "name": "Google Sheets: Catat Transaksi",
       "retryOnFail": true,
       "waitBetweenTries": 2000,
@@ -361,9 +361,9 @@
         4992,
         1184
       ],
-      "id": "785776b1-affa-42ae-b943-65d98be285ec",
+      "id": "***-node-id-***",
       "name": "Telegram: Kirim Balasan",
-      "webhookId": "5559170d-7256-4a81-95ce-09d3c26e44eb",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -388,7 +388,7 @@
         3248,
         1472
       ],
-      "id": "ee6d1968-f825-4122-ad04-ec155073b2c3",
+      "id": "***-node-id-***",
       "name": "Schedule: Akhir Bulan"
     },
     {
@@ -401,7 +401,7 @@
         3600,
         1472
       ],
-      "id": "5739be04-e0b5-4951-9874-68ae2a82b50e",
+      "id": "***-node-id-***",
       "name": "Code: Siapkan Bulan Rekap Otomatis"
     },
     {
@@ -429,7 +429,7 @@
         3888,
         1472
       ],
-      "id": "b384cd14-f807-4fab-877f-668fa85b4e17",
+      "id": "***-node-id-***",
       "name": "Google Sheets: Baca Untuk Rekap",
       "retryOnFail": true,
       "waitBetweenTries": 2000,
@@ -450,7 +450,7 @@
         4112,
         1472
       ],
-      "id": "97ac1769-17ca-416e-8329-d1c6e2de8684",
+      "id": "***-node-id-***",
       "name": "Code: Hitung Rekap Bulanan"
     },
     {
@@ -549,7 +549,7 @@
         4368,
         1360
       ],
-      "id": "33f978b3-71f0-4498-8cf2-1f0add086e06",
+      "id": "***-node-id-***",
       "name": "Google Sheets: Simpan Rekap Bulanan",
       "retryOnFail": true,
       "waitBetweenTries": 2000,
@@ -570,7 +570,7 @@
         4368,
         1536
       ],
-      "id": "0f3ce755-17c1-45a2-b1ef-e2bef5e125ec",
+      "id": "***-node-id-***",
       "name": "Code: Cek Chat Rekap"
     },
     {
@@ -586,9 +586,9 @@
         3200,
         976
       ],
-      "id": "de1f130a-6596-489e-8c12-42b996f587be",
+      "id": "***-node-id-***",
       "name": "Telegram",
-      "webhookId": "496841e8-8e58-4a45-9923-c63f9e85445c",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -606,7 +606,7 @@
         3376,
         976
       ],
-      "id": "eb52c66f-7d25-40e7-93e0-4d81f1967b4c",
+      "id": "***-node-id-***",
       "name": "Code"
     },
     {
@@ -621,9 +621,9 @@
         3856,
         816
       ],
-      "id": "59b1b732-cf72-4421-9fc9-c43d9d72faa1",
+      "id": "***-node-id-***",
       "name": "Foto",
-      "webhookId": "c783b317-946d-41d0-9d4d-2e9f389b871e",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -641,7 +641,7 @@
         4336,
         816
       ],
-      "id": "4f4b6ee5-133b-4489-8d59-41595bb7d579",
+      "id": "***-node-id-***",
       "name": "foto"
     },
     {
@@ -655,7 +655,7 @@
         4048,
         944
       ],
-      "id": "2ebf630f-5f58-4847-9e0d-359bec3030f3",
+      "id": "***-node-id-***",
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
@@ -682,7 +682,7 @@
         },
         "options": {}
       },
-      "id": "a05608a1-f29c-4e1f-94b7-fb34cc83e189",
+      "id": "***-node-id-***",
       "name": "Cek Email Shopee",
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.2,
@@ -702,7 +702,7 @@
       "parameters": {
         "jsCode": "// PENTING: sesuaikan pola regex di bawah ini dengan format ASLI email notifikasi Shopee lo.\n// Kirim contoh isi email ke Claude kalau butuh bantuan menyesuaikan.\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const emailBody = item.json.text || item.json.snippet || '';\n\n  const namaMatch = emailBody.match(/Nama Pembeli\\s*[:\\-]?\\s*(.+)/i);\n  const jumlahMatch = emailBody.match(/Total Pembayaran\\s*[:\\-]?\\s*Rp?\\s*([\\d.,]+)/i);\n  const orderIdMatch = emailBody.match(/No\\.?\\s*Pesanan\\s*[:\\-]?\\s*([A-Z0-9]+)/i);\n\n  const now = new Date();\n\n  results.push({\n    json: {\n      marketplace: 'Shopee',\n      nama_customer: namaMatch ? namaMatch[1].trim() : 'Tidak diketahui',\n      jumlah_bayar: jumlahMatch ? jumlahMatch[1].replace(/\\./g, '').replace(',', '.') : '0',\n      order_id: orderIdMatch ? orderIdMatch[1].trim() : '-',\n      tanggal: now.toISOString().split('T')[0],\n      waktu: now.toLocaleTimeString('id-ID')\n    }\n  });\n}\n\nreturn results;"
       },
-      "id": "694385d9-44f5-48c3-8c44-1d176e8c875f",
+      "id": "***-node-id-***",
       "name": "Ekstrak Data Pembayaran",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -717,7 +717,7 @@
         "text": "=🔔 Pembayaran Masuk!\nMarketplace: {{ $json.marketplace }}\nCustomer: {{ $json.nama_customer }}\nJumlah: Rp{{ $json.jumlah_bayar }}\nOrder ID: {{ $json.order_id }}\nWaktu: {{ $json.waktu }}",
         "additionalFields": {}
       },
-      "id": "8a5356e6-225f-495c-bad5-6e3a69d0f674",
+      "id": "***-node-id-***",
       "name": "Kirim Alert Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -725,7 +725,7 @@
         5120,
         1376
       ],
-      "webhookId": "b7d97e71-818f-4ac0-bb3f-e1ddc47e5c31",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "MDvWxV2RtuJHUx1V",
@@ -762,7 +762,7 @@
         },
         "options": {}
       },
-      "id": "e46bd515-27af-4889-8feb-969cc5b292cf",
+      "id": "***-node-id-***",
       "name": "Simpan ke Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
@@ -789,7 +789,7 @@
         1344
       ],
       "typeVersion": 1,
-      "id": "cd98e572-aaf0-45e5-89bd-713cac0b43c3",
+      "id": "***-node-id-***",
       "name": "Sticky Note"
     },
     {
@@ -805,7 +805,7 @@
         800
       ],
       "typeVersion": 1,
-      "id": "8b65b519-81dd-4f27-8ad3-7b2fc3d32164",
+      "id": "***-node-id-***",
       "name": "Sticky Note1"
     },
     {
@@ -821,7 +821,7 @@
         1344
       ],
       "typeVersion": 1,
-      "id": "5c4a6fab-5878-4589-aa6c-e8e0bd5bf6c9",
+      "id": "***-node-id-***",
       "name": "Sticky Note3"
     },
     {
@@ -835,7 +835,7 @@
           ]
         }
       },
-      "id": "d52a9a83-ff1f-454f-ba37-23f8b0baf783",
+      "id": "***-node-id-***",
       "name": "Dashboard: Jadwal Harian 23.59",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -865,7 +865,7 @@
         },
         "options": {}
       },
-      "id": "ed76f834-aa5b-45e4-9a18-03cd024c3099",
+      "id": "***-node-id-***",
       "name": "Dashboard: Baca Transaksi",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
@@ -887,7 +887,7 @@
       "parameters": {
         "jsCode": "// ============================================================\n// DAILY BUSINESS DASHBOARD - Hitung Metrik\n// ============================================================\n// KONFIGURASI - ubah sesuai kebutuhan (hanya bagian ini)\nconst MARGIN = 0.30;              // 0.30 = margin profit 30%\nconst KOLOM_NOMINAL = 'Nominal';  // nama kolom nominal di sheet\nconst KOLOM_TANGGAL = 'Tanggal';  // nama kolom tanggal di sheet\nconst KOLOM_JENIS   = 'Jenis';    // nama kolom jenis di sheet\n// ============================================================\n\nfunction pad2(v) { return String(v).padStart(2, '0'); }\n\nfunction parseDate(value) {\n  const text = String(value || '').trim();\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\nfunction isToday(dateStr) {\n  const d = parseDate(dateStr);\n  if (!d) return false;\n  const now = new Date();\n  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();\n}\n\nfunction parseNominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  const text = String(value || '').replace(/rp/gi, '').replace(/[^0-9]/g, '');\n  const n = Number(text);\n  return Number.isFinite(n) ? Math.max(0, n) : 0;\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Math.round(value || 0).toLocaleString('id-ID');\n}\n\nconst rows = $input.all();\nconst now = new Date();\nconst tanggal = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\nconst tanggalShort = pad2(now.getDate()) + '/' + pad2(now.getMonth() + 1) + '/' + now.getFullYear();\n\n// Filter: hanya Pemasukan dengan tanggal hari ini\nconst orders = rows\n  .filter(r => {\n    const jenis = String(r.json[KOLOM_JENIS] || '').toLowerCase();\n    return isToday(r.json[KOLOM_TANGGAL]) && jenis.includes('pemasukan');\n  })\n  .map(r => parseNominal(r.json[KOLOM_NOMINAL]))\n  .filter(v => v > 0);\n\n// Jika tidak ada transaksi hari ini\nif (orders.length === 0) {\n  return [{ json: {\n    tanggal, tanggal_short: tanggalShort,\n    total_order: 0,\n    total_revenue_raw: 0,  total_revenue: 'Rp0',\n    estimasi_modal_raw: 0, estimasi_modal: 'Rp0',\n    estimasi_profit_raw: 0, estimasi_profit: 'Rp0',\n    average_order_raw: 0,  average_order: 'Rp0',\n    order_terbesar_raw: 0, order_terbesar: 'Rp0',\n    order_terkecil_raw: 0, order_terkecil: 'Rp0',\n    margin_persen: Math.round(MARGIN * 100),\n    ada_data: false\n  }}];\n}\n\n// Hitung 7 metrik\nconst totalRevenue   = orders.reduce((a, b) => a + b, 0);\nconst totalOrder     = orders.length;\nconst averageOrder   = totalRevenue / totalOrder;\nconst orderTerbesar  = Math.max(...orders);\nconst orderTerkecil  = Math.min(...orders);\nconst estimasiModal  = totalRevenue * (1 - MARGIN);\nconst estimasiProfit = totalRevenue * MARGIN;\n\nreturn [{ json: {\n  tanggal, tanggal_short: tanggalShort,\n  total_order: totalOrder,\n  total_revenue_raw:   Math.round(totalRevenue),   total_revenue:   formatRp(totalRevenue),\n  estimasi_modal_raw:  Math.round(estimasiModal),  estimasi_modal:  formatRp(estimasiModal),\n  estimasi_profit_raw: Math.round(estimasiProfit), estimasi_profit: formatRp(estimasiProfit),\n  average_order_raw:   Math.round(averageOrder),   average_order:   formatRp(averageOrder),\n  order_terbesar_raw:  Math.round(orderTerbesar),  order_terbesar:  formatRp(orderTerbesar),\n  order_terkecil_raw:  Math.round(orderTerkecil),  order_terkecil:  formatRp(orderTerkecil),\n  margin_persen: Math.round(MARGIN * 100),\n  ada_data: true\n}}];"
       },
-      "id": "935f5050-4fb6-4f28-a1be-540e7799b017",
+      "id": "***-node-id-***",
       "name": "Dashboard: Hitung Metrik",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1086,7 +1086,7 @@
         },
         "options": {}
       },
-      "id": "1886fe62-a30d-4f37-9c64-0fbd668cdac7",
+      "id": "***-node-id-***",
       "name": "Dashboard: Simpan Log",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
@@ -1113,7 +1113,7 @@
           "parse_mode": "Markdown"
         }
       },
-      "id": "d2bf9d1b-01af-46cb-9ef3-39e0b6f1037f",
+      "id": "***-node-id-***",
       "name": "Dashboard: Kirim Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -1121,7 +1121,7 @@
         4352,
         1824
       ],
-      "webhookId": "9a3b4126-b875-4a11-91c9-a374da4aae8b",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "tjZM6ozjOFHlpjsD",
@@ -1143,7 +1143,7 @@
         1664
       ],
       "typeVersion": 1,
-      "id": "ed3e4c9c-3784-4211-a3a4-447d27ef2811",
+      "id": "***-node-id-***",
       "name": "Sticky Note Dashboard"
     },
     {
@@ -1160,9 +1160,9 @@
         5200,
         1184
       ],
-      "id": "83fa1d2e-0c16-48e9-83f9-b8fcc925306e",
+      "id": "***-node-id-***",
       "name": "Send a text message",
-      "webhookId": "8ab4ff6f-2849-4535-8cd0-60c030ee4f9e",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "tjZM6ozjOFHlpjsD",
@@ -1182,7 +1182,7 @@
         4272,
         992
       ],
-      "id": "aece7dcf-3800-4589-b047-e38cc400b089",
+      "id": "***-node-id-***",
       "name": "Simple Memory"
     },
     {
@@ -1196,7 +1196,7 @@
         3888,
         1264
       ],
-      "id": "5b8180bc-6d4f-4b7c-b822-c3ba759e7f5a",
+      "id": "***-node-id-***",
       "name": "Simple Memory1"
     },
     {
@@ -1213,9 +1213,9 @@
         4544,
         1824
       ],
-      "id": "27435eb3-b423-40e3-9242-4f92445d8173",
+      "id": "***-node-id-***",
       "name": "Send a text message1",
-      "webhookId": "8ab4ff6f-2849-4535-8cd0-60c030ee4f9e",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "tjZM6ozjOFHlpjsD",

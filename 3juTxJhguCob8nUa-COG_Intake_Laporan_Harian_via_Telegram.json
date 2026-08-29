@@ -8,7 +8,7 @@
         ],
         "additionalFields": {}
       },
-      "id": "60323520-b662-4b6f-9e98-200143af91a5",
+      "id": "***-node-id-***",
       "name": "Admin Message In",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.3,
@@ -16,7 +16,7 @@
         0,
         192
       ],
-      "webhookId": "7d6de4eb-f968-4e6d-8993-0cdd743ee0ff",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -47,7 +47,7 @@
         },
         "options": {}
       },
-      "id": "5ddfd048-a8a4-4c51-87b0-29af3536f8a4",
+      "id": "***-node-id-***",
       "name": "Lookup Admin Whitelist",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
@@ -86,7 +86,7 @@
         },
         "options": {}
       },
-      "id": "46ca46a4-f340-4ada-838a-a6c5c6edf1c5",
+      "id": "***-node-id-***",
       "name": "Is Authorized Admin?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -99,7 +99,7 @@
       "parameters": {
         "jsCode": "\nconst MONTHS = { januari:1, februari:2, maret:3, april:4, mei:5, juni:6, juli:7, agustus:8, september:9, oktober:10, november:11, desember:12 };\n\nfunction parseIndoDate(s) {\n  const m = s.match(/(\\d{1,2})\\s+([A-Za-z]+)\\s+(\\d{4})/);\n  if (!m) return null;\n  const day = m[1].padStart(2, '0');\n  const monthNum = MONTHS[m[2].toLowerCase()];\n  if (!monthNum) return null;\n  const month = String(monthNum).padStart(2, '0');\n  return `${m[3]}-${month}-${day}`;\n}\n\nfunction toNumber(raw) {\n  if (raw === undefined || raw === null) return null;\n  const cleaned = String(raw).trim().replace(',', '.');\n  if (cleaned === '' || cleaned === '-') return null;\n  const n = parseFloat(cleaned);\n  return isNaN(n) ? null : n;\n}\n\nconst rawText = $json.message && $json.message.text ? $json.message.text : '';\nconst chatId = $json.message ? $json.message.chat.id : null;\nconst fromName = $json.message && $json.message.from ? ($json.message.from.first_name || '') : '';\n\nconst lines = rawText.split('\\n').map(l => l.trim());\n\nlet tanggalRaw = null, tanggalIso = null, cuaca = null, project = null;\nfor (const line of lines) {\n  if (/^tgl\\b/i.test(line)) { tanggalRaw = line.replace(/^tgl\\s*/i, '').trim(); tanggalIso = parseIndoDate(tanggalRaw); }\n  else if (/^cuaca\\s*:/i.test(line)) { cuaca = line.split(':').slice(1).join(':').trim(); }\n  else if (/^project\\s*:?/i.test(line)) { project = line.replace(/^project\\s*:?/i, '').trim(); }\n}\n\nconst blocks = [];\nlet current = null;\nfor (const line of lines) {\n  if (/^\\d+\\./.test(line)) {\n    if (current) blocks.push(current);\n    current = [line];\n  } else if (current) {\n    if (line === '') continue;\n    current.push(line);\n  }\n}\nif (current) blocks.push(current);\n\nconst rows = [];\nconst errors = [];\n\nfor (const block of blocks) {\n  const text = block.join('\\n');\n  const headerMatch = block[0].match(/^(\\d+)\\.\\s*(.+?)\\s*\\(([^)]+)\\)/);\n  if (!headerMatch) {\n    errors.push({ raw: text, reason: 'Header operator/unit tidak dikenali (format: \"1.Nama (KODE)\")' });\n    continue;\n  }\n  const nomor = headerMatch[1];\n  const operator = headerMatch[2].trim();\n  const unitCode = headerMatch[3].trim();\n\n  const unitModelMatch = text.match(/Unit\\s*:\\s*(.+)/i);\n  const hmMatch = text.match(/HM\\s*:\\s*([\\d.,-]+)/i);\n  const bbmMatch = text.match(/BBM\\s*:\\s*([\\d.,-]+)/i);\n  const jobMatch = text.match(/Job\\s*:\\s*(.+)/i);\n  const hasilMatch = text.match(/Hasil\\s*:\\s*(.*)/i);\n  const keteranganMatch = text.match(/#(.+)/);\n\n  const missing = [];\n  const hm = hmMatch ? toNumber(hmMatch[1]) : null;\n  const bbm = bbmMatch ? toNumber(bbmMatch[1]) : null;\n  if (hm === null) missing.push('HM');\n  if (bbm === null) missing.push('BBM');\n  if (!jobMatch) missing.push('JOB');\n  if (!hasilMatch) missing.push('Hasil');\n  if (!keteranganMatch) missing.push('Keterangan (#...)');\n  if (!tanggalIso) missing.push('Tanggal (header)');\n\n  if (missing.length > 0) {\n    errors.push({ raw: text, unitCode, operator, reason: 'Field tidak lengkap/tidak terbaca: ' + missing.join(', ') });\n    continue;\n  }\n\n  const literPerHm = hm > 0 ? Math.round((bbm / hm) * 100) / 100 : 0;\n\n  rows.push({\n    rowKey: tanggalIso + '_' + unitCode,\n    tanggal: tanggalIso,\n    nomor,\n    operator,\n    unitCode,\n    unitModel: unitModelMatch ? unitModelMatch[1].trim() : '',\n    hm,\n    bbm,\n    literPerHm,\n    job: jobMatch[1].trim(),\n    hasil: hasilMatch[1].trim(),\n    keterangan: keteranganMatch[1].trim(),\n    cuaca: cuaca || '',\n    project: project || '',\n    savedAt: new Date().toISOString(),\n    savedByChatId: chatId,\n    savedByName: fromName\n  });\n}\n\nlet summary = 'Rekap laporan ' + (tanggalRaw || '(tanggal tidak terbaca)') + '\\n';\nsummary += 'Berhasil disimpan: ' + rows.length + ' unit\\n';\nsummary += 'Gagal diproses: ' + errors.length + ' entri\\n';\nif (errors.length > 0) {\n  summary += '\\nEntri BELUM tersimpan (perbaiki lalu kirim ulang HANYA entri ini):\\n';\n  errors.forEach((e, i) => {\n    summary += (i + 1) + '. ' + (e.unitCode || '?') + ' ' + (e.operator || '') + ' - ' + e.reason + '\\n';\n  });\n}\n\nreturn [{ json: { rows, errors, tanggalRaw, tanggalIso, cuaca, project, chatId, summary, totalRows: rows.length, totalErrors: errors.length } }];\n"
       },
-      "id": "b699141e-a954-4469-be6a-8ed1eda76e64",
+      "id": "***-node-id-***",
       "name": "Parse WA Report Batch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -113,7 +113,7 @@
         "fieldToSplitOut": "rows",
         "options": {}
       },
-      "id": "92b6df35-07e4-49d0-a8ee-da19a96f8a42",
+      "id": "***-node-id-***",
       "name": "Split Rows",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
@@ -308,7 +308,7 @@
         },
         "options": {}
       },
-      "id": "dab8ad77-aa7d-4d2e-90a8-94fd2376e1e6",
+      "id": "***-node-id-***",
       "name": "Save To Reports Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
@@ -332,7 +332,7 @@
           "appendAttribution": false
         }
       },
-      "id": "f93f6104-3341-4f37-b033-cff214a4c919",
+      "id": "***-node-id-***",
       "name": "Reply Batch Summary",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -341,7 +341,7 @@
         0
       ],
       "executeOnce": true,
-      "webhookId": "345a9771-591b-448c-912f-a64153870d5b",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -357,7 +357,7 @@
           "appendAttribution": false
         }
       },
-      "id": "e0eeb6c3-f049-4a86-9f5d-10d4a81ad050",
+      "id": "***-node-id-***",
       "name": "Notify Save Error",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -365,7 +365,7 @@
         1344,
         192
       ],
-      "webhookId": "ecd11f22-770c-4c4b-93b2-108f9e7b6a90",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -381,7 +381,7 @@
           "appendAttribution": false
         }
       },
-      "id": "d43195bb-ee5a-41ec-ad66-ff8025fd6849",
+      "id": "***-node-id-***",
       "name": "Reply Unauthorized",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -389,7 +389,7 @@
         672,
         288
       ],
-      "webhookId": "f18bb1e3-cf13-4c4e-ba20-989faa31b444",
+      "webhookId": "***-node-id-***",
       "credentials": {
         "telegramApi": {
           "id": "8bxiNJ1AxhaDwrmI",
@@ -404,7 +404,7 @@
         "width": 1516,
         "color": 4
       },
-      "id": "8d25da35-a5fa-4da6-bc4e-43626730131c",
+      "id": "***-node-id-***",
       "name": "Sticky Note e6ead477",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
