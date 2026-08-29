@@ -60,20 +60,3 @@ without daily manual intervention.
 
 ## Tools
 n8n · WhatsApp (Fonnte) · Telegram · Google Sheets · Groq · Gemini · OpenAI · Claude · OCR · JavaScript Code
-
-## Note
-Sensitive data (WhatsApp numbers, group IDs, sheet IDs, node IDs) is redacted to ***
-in the JSON files so the repo is safe to publish.
-
----
-
-## Tips to make this portfolio more professional
-1. Add a per-project README (1 file each) with a flow screenshot and short explanation.
-   Employers like visuals, not just JSON.
-2. Add a `demo/` folder with a 30-second screen recording of the workflow running.
-3. Put this repo link in your LinkedIn "Featured" section and write one post: "I built X with n8n".
-4. Split into separate repos (one project each) so you can share with specific clients.
-5. Add badges ("Built with n8n", "AI-powered") to the README.
-6. Don't claim "Founder/Engineer" if you're not — "Automation Builder" is more credible.
-7. Update regularly: commit a new project whenever you finish one. A live portfolio = high value.
-8. Keep English consistent in titles/sections so global employers understand.
