@@ -33,27 +33,39 @@ Jack
 [email] | [WhatsApp/Telegram]
 
 ================================================================
-2. ATOMIC DIGITAL MARKETING — Automation Specialist (n8n Expert, Remote)
+2. ATOMIC DIGITAL MARKETING — n8n Automation Specialist (Remote)  [REVISI = tembak requirement]
    Link: https://jobgether.com/offer/6a7b31fc490731f1e19522f8-automation-specialist-n8n-expert
+   Analisa: match ~80%. Punya: self-host n8n, API/webhook/JSON/conditional, AI (Groq/Gemini/OpenAI/Claude),
+   Sheets, production workflow. Kurang (jujur): HubSpot/Mailchimp/Slack — tapi bisa adaptasi via n8n node.
 ================================================================
-SUBJECT: n8n Automation Specialist application — Jack
+SUBJECT: n8n Automation Specialist application — Jack (self-hosted n8n + AI integrations)
 
 MESSAGE:
-Hello Atomic Digital Marketing,
+Hello Atomic Digital AI team,
 
-I'm Jack, a no-code / low-code automation builder using n8n. I build workflows that
-connect WhatsApp, Telegram, Google Sheets, and AI (Groq, Gemini, OpenAI, Claude).
+I'm Jack, an n8n automation builder working with self-hosted n8n. I build API-connected
+workflows across messaging, sheets, and AI — exactly the kind of systems Atomic Digital AI
+is launching.
 
-Relevant to your agency:
-- Multi-location HSE reporting system (5 sites) over WhatsApp → Fonnte → n8n →
-  Gemini → Google Sheets with auto-confirmation.
-- Active daily K3 safety reminder to a WhatsApp group (production).
-- Marketing-style automations: daily recap bots, AI content generation, budget alerts.
+What I've shipped & run in production:
+- Multi-location HSE reporting (5 sites): WhatsApp → Fonnte webhook → n8n → Gemini parse →
+  Google Sheets, with conditional routing (#LOG/#JSA/#KEGIATAN) and auto-confirmation.
+- Daily K3 safety reminder bot → WhatsApp group via Fonnte (active, runs every day).
+- Daily finance dashboard: Google Sheets → n8n → AI recap + budget alerts.
 
-I'm self-taught, comfortable with n8n, JavaScript Code, webhooks, and AI agents.
-Portfolio & workflows: https://github.com/gacorauto4-tech/jack-automation-portfolio
+Technical fit with your requirements:
+- n8n: self-hosted, comfortable with nodes, JavaScript Code, webhooks, JSON, conditionals,
+  error handling, and documentation of flows.
+- AI integrations: Groq, Gemini, OpenAI, and Claude via API — same pattern as your OpenAI/Claude needs.
+- Marketing-adjacent automations: daily recap bots, AI content generation, alert systems.
 
-I'd like to help Atomic deliver n8n automations for clients. Remote, can start.
+On CRMs (HubSpot/Mailchimp/Slack/Notion): I haven't used those specific platforms yet, but I
+connect systems through APIs and n8n nodes, so adapting to a new platform is straightforward —
+happy to pick it up fast. I document every flow so non-technical teams can follow.
+
+Portfolio with working workflows: https://github.com/gacorauto4-tech/jack-automation-portfolio
+
+I'd like to help Atomic Digital AI build scalable automations. Fully remote, can start.
 
 Best,
 Jack
