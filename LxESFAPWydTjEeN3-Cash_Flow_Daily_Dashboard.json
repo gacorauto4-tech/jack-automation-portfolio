@@ -1,0 +1,1647 @@
+{
+  "name": "Cash Flow + Daily Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ !!$json.message.photo }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        976
+      ],
+      "id": "a6bc8f5e-6514-45ff-aa38-bae447ba043d",
+      "name": "Ada Foto?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Baca foto Telegram ini dan ekstrak transaksi sesuai instruksi sistem.",
+        "options": {
+          "systemMessage": "=Anda membaca foto dari Telegram: struk, nota, QRIS, bukti transfer, mutasi bank, atau screenshot transaksi bank.\nBalas HANYA JSON valid tanpa markdown, code fence, <think>, atau penjelasan.\n\nSchema wajib:\n{\n  \"jenis\": \"Pemasukan\" | \"Pengeluaran\",\n  \"kategori\": \"Bahan Baku\" | \"Operasional\" | \"Kemasan\" | \"Gaji\" | \"Penjualan Harian\" | \"Pesanan Custom\" | \"Lainnya\",\n  \"toko\": \"\",\n  \"tanggal\": \"\",\n  \"items\": [\n    { \"nama_item\": \"\", \"qty\": \"\", \"nominal\": 0 }\n  ]\n}\n\nAturan:\n- Untuk struk/nota, ambil item transaksi utama. Jangan masukkan subtotal, diskon, cashback, DP, kembalian, atau total sebagai item terpisah.\n- Untuk screenshot bank/QRIS/bukti transfer, buat 1 item berisi deskripsi transaksi/merchant/penerima.\n- Jika uang keluar/pembayaran/pembelian/transfer keluar, jenis = \"Pengeluaran\".\n- Jika uang masuk/penerimaan/transfer masuk/penjualan, jenis = \"Pemasukan\".\n- nominal harus angka rupiah tanpa titik, koma, simbol Rp, atau teks.\n- Jika kategori tidak yakin, gunakan \"Lainnya\".\n- Jika tanggal tidak terbaca, isi tanggal ketika di input.",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4048,
+        816
+      ],
+      "id": "dba69eb5-235b-4245-a063-b5b1f4c84bdd",
+      "name": "AI Agent: Baca Foto",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_valid }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        4480,
+        816
+      ],
+      "id": "2b222837-763a-47cb-936f-faf12c8cb052",
+      "name": "Data Foto Valid?"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "rows",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        4832,
+        800
+      ],
+      "id": "47d28824-c10e-477e-9c20-791600730d8b",
+      "name": "Split Out: Item Foto"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text || $json.message.caption || \"\" }}",
+        "options": {
+          "systemMessage": "=Anda adalah asisten keuangan toko bahan kue di Telegram.\nTugas Anda: memahami pesan user dan mengembalikan JSON valid saja.\nJangan gunakan markdown, code fence, <think>, penjelasan, atau teks tambahan.\n\nPilih salah satu action:\n1. \"transaction\" untuk mencatat transaksi.\n2. \"query\" untuk pertanyaan laporan dari database.\n3. \"help\" jika pesan tidak jelas.\n\nSchema wajib:\n{\n  \"action\": \"transaction\" | \"query\" | \"help\",\n  \"transaction\": {\n    \"jenis\": \"Pemasukan\" | \"Pengeluaran\",\n    \"kategori\": \"Bahan Baku\" | \"Operasional\" | \"Kemasan\" | \"Gaji\" | \"Penjualan Harian\" | \"Pesanan Custom\" | \"Lainnya\",\n    \"deskripsi\": \"\",\n    \"qty\": \"\",\n    \"nominal\": 0,\n    \"tanggal\": \"\"\n  },\n  \"query\": {\n    \"metric\": \"pemasukan\" | \"pengeluaran\" | \"saldo\" | \"rekap\" | \"transaksi\",\n    \"period\": \"today\" | \"week\" | \"month\" | \"year\",\n    \"month\": 0,\n    \"year\": 0\n  },\n  \"reply\": \"\"\n}\n\nAturan transaksi:\n- beli/bayar/belanja/keluar/transfer keluar = Pengeluaran.\n- jual/terima/dapat/laku/transfer masuk = Pemasukan.\n- nominal WAJIB berupa angka rupiah murni (integer), tanpa titik, koma, simbol Rp, spasi, atau teks. Contoh benar: 150000. Salah: \"Rp150.000\", \"150rb\".\n- Konversi satuan singkatan: rb/ribu/k = x1.000 ; jt/juta = x1.000.000 ; m/miliar/milyar = x1.000.000.000.\n  Contoh: 10k=10000; 10rb=10000; 150rb=150000; 150k=150000; 1,5jt=1500000; 2 juta=2000000; 1 miliar=1000000000.\n- Konversi angka yang ditulis dengan kata (terbilang): seratus ribu=100000; seratus lima puluh ribu=150000; dua ratus lima puluh ribu=250000; lima ratus ribu=500000; dua juta lima ratus ribu=2500000.\n- Titik/koma pada angka besar adalah pemisah ribuan, bukan desimal. Contoh: 150.000=150000; 1.500.000=1500000.\n- Jika benar-benar tidak ada nominal, isi 0.\n- Jika tanggal tidak disebutkan, kosongkan tanggal.\n\nAturan query:\n- \"pemasukan hari ini\" => metric pemasukan, period today.\n- \"pengeluaran minggu ini\" => metric pengeluaran, period week.\n- \"rekap bulan ini\" atau \"saldo bulan ini\" => period month.\n- \"rekap bulan 6\", \"bulan juni\", atau \"juni 2026\" => month 6, year jika disebutkan.\n- Jika bulan/tahun tidak disebutkan, isi 0 agar sistem memakai tanggal sekarang."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        3808,
+        1072
+      ],
+      "id": "f0d610ce-1dbc-4845-9b22-8e36029b943c",
+      "name": "AI Agent: Pahami Pesan"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3728,
+        1216
+      ],
+      "id": "56055c23-ee86-4f33-81d0-905ab05b5d1c",
+      "name": "Groq Chat Model: Teks",
+      "credentials": {
+        "groqApi": {
+          "id": "MEtS9BxMQLtX5K6t",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function todayParts() {\n  const now = new Date();\n  return { d: now.getDate(), m: now.getMonth() + 1, y: now.getFullYear(), date: now };\n}\n\nfunction pad2(value) {\n  return String(value).padStart(2, '0');\n}\n\nfunction todayStr() {\n  const t = todayParts();\n  return pad2(t.d) + '/' + pad2(t.m) + '/' + t.y;\n}\n\nfunction getChatId() {\n  return $('Telegram').item.json.message.chat.id;\n}\n\nfunction cleanText(value) {\n  if (value === undefined || value === null) return '';\n  if (typeof value !== 'string') return JSON.stringify(value);\n  return value\n    .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')\n    .replace(/<think>[\\s\\S]*/gi, '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96) + '(?:json)?', 'gi'), '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96), 'g'), '')\n    .trim();\n}\n\nfunction extractJsonCandidate(text) {\n  const cleaned = cleanText(text);\n  if (!cleaned) return '';\n  const start = cleaned.search(/[\\[{]/);\n  if (start === -1) return cleaned;\n  const open = cleaned[start];\n  const close = open === '{' ? '}' : ']';\n  let depth = 0;\n  let inString = false;\n  let escaped = false;\n  for (let i = start; i < cleaned.length; i++) {\n    const ch = cleaned[i];\n    if (escaped) { escaped = false; continue; }\n    if (ch === '\\\\') { escaped = true; continue; }\n    if (ch === '\"') { inString = !inString; continue; }\n    if (inString) continue;\n    if (ch === open) depth++;\n    if (ch === close) depth--;\n    if (depth === 0) return cleaned.slice(start, i + 1);\n  }\n  return cleaned.slice(start);\n}\n\nfunction getAiText(item) {\n  const candidates = [\n    item.output, item.text, item.content, item.response, item.result,\n    item.message && item.message.content,\n    item.choices && item.choices[0] && item.choices[0].message && item.choices[0].message.content,\n  ];\n  for (const candidate of candidates) {\n    if (candidate !== undefined && candidate !== null && String(candidate).trim() !== '') return candidate;\n  }\n  return '';\n}\n\nfunction parseAiJson(item) {\n  const raw = getAiText(item);\n  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;\n  const candidate = extractJsonCandidate(raw);\n  if (!candidate) throw new Error('AI_NO_JSON');\n  return JSON.parse(candidate);\n}\n\nfunction str(value, fallback = '') {\n  if (value === undefined || value === null) return fallback;\n  const text = String(value).trim();\n  return text || fallback;\n}\n\nfunction normalizeDate(value) {\n  const text = str(value);\n  return text && text.toLowerCase() !== 'null' ? text : todayStr();\n}\n\nfunction parseDate(value) {\n  const text = str(value);\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\n// Tanggal versi panjang: \"7 Juli 2026\"\nfunction tanggalPanjang(dateText) {\n  const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];\n  const d = parseDate(dateText) || new Date();\n  return d.getDate() + ' ' + bulan[d.getMonth()] + ' ' + d.getFullYear();\n}\n\nfunction parseIndoWords(text) {\n  let t = String(text || '').toLowerCase();\n  t = t.replace(/[^a-z\\s]/g, ' ').replace(/\\s+/g, ' ').trim();\n  if (!t) return 0;\n  t = ' ' + t + ' ';\n  t = t.replace(/\\bseratus\\b/g, ' satu ratus ').replace(/\\bseribu\\b/g, ' satu ribu ').replace(/\\bsejuta\\b/g, ' satu juta ').replace(/\\bsemiliar\\b/g, ' satu miliar ');\n  const words = t.trim().split(/\\s+/).filter(Boolean);\n  const num = { satu:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9 };\n  let total = 0, group = 0, small = 0, matched = false;\n  for (const w of words) {\n    if (num[w] != null) { small += num[w]; matched = true; }\n    else if (w === 'sepuluh') { group += 10; matched = true; }\n    else if (w === 'sebelas') { group += 11; matched = true; }\n    else if (w === 'belas') { group += 10 + small; small = 0; matched = true; }\n    else if (w === 'puluh') { group += 10 * (small || 0); small = 0; matched = true; }\n    else if (w === 'ratus') { group += 100 * (small || 1); small = 0; matched = true; }\n    else if (w === 'ribu') { total += 1000 * ((group + small) || 1); group = 0; small = 0; matched = true; }\n    else if (w === 'juta') { total += 1e6 * ((group + small) || 1); group = 0; small = 0; matched = true; }\n    else if (w === 'miliar' || w === 'milyar') { total += 1e9 * ((group + small) || 1); group = 0; small = 0; matched = true; }\n    else if (w === 'nol') { matched = true; }\n  }\n  return matched ? (total + group + small) : 0;\n}\n\nfunction parseNumericAmount(s) {\n  const withUnit = s.match(/(-?\\d[\\d.,]*)\\s*(miliar|milyar|juta|jt|ribu|rb|k)(?![a-z])/i);\n  let raw, unit;\n  if (withUnit) { raw = withUnit[1]; unit = withUnit[2].toLowerCase(); }\n  else {\n    const plain = s.match(/-?\\d[\\d.,]*/);\n    if (!plain) return 0;\n    raw = plain[0]; unit = '';\n  }\n  let mult = 1;\n  if (/miliar|milyar/.test(unit)) mult = 1e9;\n  else if (/juta|jt/.test(unit)) mult = 1e6;\n  else if (/ribu|rb|k/.test(unit)) mult = 1e3;\n  let numTxt;\n  if (mult > 1) {\n    if (raw.includes(',')) numTxt = raw.replace(/\\./g, '').replace(',', '.');\n    else if (raw.includes('.')) {\n      const parts = raw.split('.');\n      const last = parts[parts.length - 1];\n      numTxt = (parts.length === 2 && last.length !== 3) ? raw : raw.replace(/\\./g, '');\n    } else numTxt = raw;\n  } else {\n    numTxt = raw.replace(/[.,]/g, '');\n  }\n  const n = Number(numTxt);\n  return Number.isFinite(n) ? Math.max(0, Math.round(n * mult)) : 0;\n}\n\nfunction nominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  let s = String(value == null ? '' : value).toLowerCase().trim();\n  if (!s) return 0;\n  s = s.replace(/rp\\.?/gi, ' ').replace(/rupiah/gi, ' ').replace(/idr/gi, ' ').trim();\n  if (/[0-9]/.test(s)) return parseNumericAmount(s);\n  const w = parseIndoWords(s);\n  return w > 0 ? Math.round(w) : 0;\n}\n\nfunction jenis(value, fallback = 'Pengeluaran') {\n  return /^pemasukan$/i.test(str(value)) ? 'Pemasukan' : fallback;\n}\n\nfunction bulanLabel(dateText) {\n  const d = parseDate(dateText) || new Date();\n  return String(d.getFullYear()) + '-' + pad2(d.getMonth() + 1);\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Number(value || 0).toLocaleString('id-ID');\n}\n\nconst GARIS = '━━━━━━━━━━━━━━━━━━';\n\n// Bangun teks konfirmasi transaksi yang rapi\nfunction buildTransaksiText(row) {\n  const emojiJenis = row.jenis === 'Pemasukan' ? '💰' : '💸';\n  const lines = [];\n  lines.push('✅ TRANSAKSI BERHASIL DISIMPAN');\n  lines.push(GARIS);\n  lines.push('📅 Tanggal      : ' + tanggalPanjang(row.tanggal));\n  lines.push(emojiJenis + ' Jenis        : ' + row.jenis);\n  lines.push('📂 Kategori     : ' + row.kategori);\n  lines.push('📝 Deskripsi    : ' + row.item);\n  if (row.qty) lines.push('📦 Qty          : ' + row.qty);\n  lines.push('💵 Nominal      : ' + formatRp(row.nominal));\n  lines.push('📍 Sumber       : ' + row.sumber);\n  lines.push(GARIS);\n  lines.push('✅ Data berhasil masuk ke pembukuan. Terima kasih Bos 🙏');\n  return lines.join('\\n');\n}\n\ntry {\n  const parsed = parseAiJson($input.item.json);\n  const action = str(parsed.action, 'help');\n\n  if (action === 'query') {\n    const q = parsed.query || {};\n    const t = todayParts();\n    return [{\n      json: {\n        action: 'query',\n        chat_id: getChatId(),\n        metric: str(q.metric, 'rekap'),\n        period: str(q.period, 'month'),\n        month: Number(q.month || 0),\n        year: Number(q.year || 0) || t.y,\n      },\n    }];\n  }\n\n  if (action === 'transaction') {\n    const tx = parsed.transaction || {};\n    const amount = nominal(tx.nominal);\n    if (amount <= 0) throw new Error('NOMINAL_KOSONG');\n    const tanggal = normalizeDate(tx.tanggal);\n    const row = {\n      action: 'transaction',\n      is_valid: true,\n      chat_id: getChatId(),\n      tanggal,\n      jenis: jenis(tx.jenis),\n      kategori: str(tx.kategori, 'Lainnya'),\n      item: str(tx.deskripsi || tx.item || tx.nama_item, 'Transaksi Telegram'),\n      qty: str(tx.qty),\n      nominal: amount,\n      sumber: 'Telegram-Teks',\n      bulan: bulanLabel(tanggal),\n    };\n    row.confirmation_text = buildTransaksiText(row);\n    return [{ json: row }];\n  }\n\n  // action === 'help'\n  return [{\n    json: {\n      action: 'help',\n      chat_id: getChatId(),\n      confirmation_text:\n        '👋 HALO BOS! Saya Asisten Pembukuan Anda\\n' +\n        GARIS + '\\n' +\n        'Saya bisa bantu 2 hal:\\n\\n' +\n        '📝 1. MENCATAT TRANSAKSI\\n' +\n        '   Contoh ketik:\\n' +\n        '   • beli tepung 2kg 50rb\\n' +\n        '   • jual kue 3 kotak 90rb\\n' +\n        '   • bayar gaji 1,5jt\\n\\n' +\n        '📸 2. CATAT DARI FOTO\\n' +\n        '   Kirim foto struk / nota belanja,\\n' +\n        '   biar saya yang catat otomatis.\\n\\n' +\n        '📊 3. TANYA LAPORAN\\n' +\n        '   Contoh ketik:\\n' +\n        '   • pemasukan hari ini\\n' +\n        '   • pengeluaran minggu ini\\n' +\n        '   • rekap bulan juni\\n' +\n        GARIS + '\\n' +\n        'Silakan dicoba ya Bos 😊',\n    },\n  }];\n} catch (error) {\n  // Pesan error RAMAH - tidak pernah menampilkan error teknis\n  let pesan;\n  if (error.message === 'NOMINAL_KOSONG') {\n    pesan =\n      '⚠️ NOMINAL BELUM TERBACA\\n' +\n      GARIS + '\\n' +\n      'Maaf Bos, nominal transaksinya belum jelas.\\n\\n' +\n      'Coba tulis lengkap dengan angkanya ya, contoh:\\n' +\n      '• beli gula 25rb\\n' +\n      '• jual roti 3 biji 45rb\\n' +\n      GARIS + '\\n' +\n      'Silakan kirim ulang ya Bos 🙏';\n  } else {\n    pesan =\n      '⚠️ PESAN BELUM SAYA MENGERTI\\n' +\n      GARIS + '\\n' +\n      'Maaf Bos, saya belum paham maksud pesannya.\\n\\n' +\n      'Untuk mencatat, contoh:\\n' +\n      '• beli tepung 2kg 50rb\\n' +\n      '• jual kue 90rb\\n\\n' +\n      'Untuk tanya laporan, contoh:\\n' +\n      '• pemasukan hari ini\\n' +\n      '• rekap bulan ini\\n' +\n      GARIS + '\\n' +\n      'Silakan dicoba lagi ya Bos 🙏';\n  }\n  return [{\n    json: {\n      action: 'help',\n      chat_id: getChatId(),\n      confirmation_text: pesan,\n    },\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4096,
+        1072
+      ],
+      "id": "9c84bd8e-1e74-4314-808f-5cc5ceb2142a",
+      "name": "Code: Parse Perintah / Transaksi"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.action === \"query\" }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        4240,
+        1152
+      ],
+      "id": "2dcf1cb3-ea5b-4c8d-aacb-f4d24ea5796a",
+      "name": "Apakah Query Database?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.action === \"transaction\" && $json.is_valid }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        1184
+      ],
+      "id": "fac39942-5f35-43e9-8766-48dcafa1e5ca",
+      "name": "Apakah Transaksi Teks?"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI",
+          "mode": "list",
+          "cachedResultName": "CASHFLOW",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1062799069,
+          "mode": "list",
+          "cachedResultName": "Transaksi",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit#gid=1062799069"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4480,
+        992
+      ],
+      "id": "29215513-4f8b-4004-aa55-78b093671a53",
+      "name": "Google Sheets: Baca Transaksi",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function todayParts() {\n  const now = new Date();\n  return { d: now.getDate(), m: now.getMonth() + 1, y: now.getFullYear(), date: now };\n}\n\nfunction pad2(value) {\n  return String(value).padStart(2, '0');\n}\n\nfunction todayStr() {\n  const t = todayParts();\n  return pad2(t.d) + '/' + pad2(t.m) + '/' + t.y;\n}\n\nfunction getChatId() {\n  return $('Telegram').item.json.message.chat.id;\n}\n\nfunction cleanText(value) {\n  if (value === undefined || value === null) return '';\n  if (typeof value !== 'string') return JSON.stringify(value);\n  return value\n    .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')\n    .replace(/<think>[\\s\\S]*/gi, '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96) + '(?:json)?', 'gi'), '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96), 'g'), '')\n    .trim();\n}\n\nfunction extractJsonCandidate(text) {\n  const cleaned = cleanText(text);\n  if (!cleaned) return '';\n  const start = cleaned.search(/[\\[{]/);\n  if (start === -1) return cleaned;\n  const open = cleaned[start];\n  const close = open === '{' ? '}' : ']';\n  let depth = 0;\n  let inString = false;\n  let escaped = false;\n  for (let i = start; i < cleaned.length; i++) {\n    const ch = cleaned[i];\n    if (escaped) {\n      escaped = false;\n      continue;\n    }\n    if (ch === '\\\\') {\n      escaped = true;\n      continue;\n    }\n    if (ch === '\"') {\n      inString = !inString;\n      continue;\n    }\n    if (inString) continue;\n    if (ch === open) depth++;\n    if (ch === close) depth--;\n    if (depth === 0) return cleaned.slice(start, i + 1);\n  }\n  return cleaned.slice(start);\n}\n\nfunction getAiText(item) {\n  const candidates = [\n    item.output,\n    item.text,\n    item.content,\n    item.response,\n    item.result,\n    item.message && item.message.content,\n    item.choices && item.choices[0] && item.choices[0].message && item.choices[0].message.content,\n  ];\n  for (const candidate of candidates) {\n    if (candidate !== undefined && candidate !== null && String(candidate).trim() !== '') return candidate;\n  }\n  return '';\n}\n\nfunction parseAiJson(item) {\n  const raw = getAiText(item);\n  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;\n  const candidate = extractJsonCandidate(raw);\n  if (!candidate) throw new Error('AI tidak mengembalikan JSON.');\n  return JSON.parse(candidate);\n}\n\nfunction str(value, fallback = '') {\n  if (value === undefined || value === null) return fallback;\n  const text = String(value).trim();\n  return text || fallback;\n}\n\nfunction normalizeDate(value) {\n  const text = str(value);\n  return text && text.toLowerCase() !== 'null' ? text : todayStr();\n}\n\nfunction parseDate(value) {\n  const text = str(value);\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\nfunction nominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  const original = str(value).toLowerCase();\n  const multiplier = /juta|jt/.test(original) ? 1000000 : /\\d\\s*k\\b|rb|ribu/.test(original) ? 1000 : 1;\n  if (multiplier > 1) {\n    const decimalText = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/\\./g, '').replace(/,/g, '.').replace(/[^0-9.\\-]/g, '');\n    const number = Number(decimalText);\n    return Number.isFinite(number) ? Math.max(0, Math.round(number * multiplier)) : 0;\n  }\n  const text = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/[^0-9,-]/g, '').replace(/,/g, '');\n  const number = Number(text);\n  return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;\n}\n\nfunction jenis(value, fallback = 'Pengeluaran') {\n  return /^pemasukan$/i.test(str(value)) ? 'Pemasukan' : fallback;\n}\n\nfunction bulanLabel(dateText) {\n  const d = parseDate(dateText) || new Date();\n  return String(d.getFullYear()) + '-' + pad2(d.getMonth() + 1);\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Number(value || 0).toLocaleString('id-ID');\n}\n\nfunction monthName(month) {\n  return ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][month - 1] || '';\n}\n\nfunction inPeriod(date, period, month, year) {\n  if (!date) return false;\n  const now = new Date();\n  if (period === 'today') {\n    return date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();\n  }\n  if (period === 'week') {\n    const start = new Date(now);\n    const day = start.getDay() || 7;\n    start.setHours(0,0,0,0);\n    start.setDate(start.getDate() - day + 1);\n    const end = new Date(start);\n    end.setDate(start.getDate() + 7);\n    return date >= start && date < end;\n  }\n  if (period === 'year') return date.getFullYear() === year;\n  const targetMonth = month || (now.getMonth() + 1);\n  const targetYear = year || now.getFullYear();\n  return date.getMonth() + 1 === targetMonth && date.getFullYear() === targetYear;\n}\n\nconst request = $('Code: Parse Perintah / Transaksi').item.json;\nconst rows = $input.all().map((item) => item.json);\nlet pemasukan = 0;\nlet pengeluaran = 0;\nlet count = 0;\n\nfor (const row of rows) {\n  const date = parseDate(row.Tanggal || row.tanggal);\n  if (!inPeriod(date, request.period, request.month, request.year)) continue;\n  const value = nominal(row.Nominal || row.nominal);\n  const rowJenis = str(row.Jenis || row.jenis);\n  if (/pemasukan/i.test(rowJenis)) pemasukan += value;\n  if (/pengeluaran/i.test(rowJenis)) pengeluaran += value;\n  count++;\n}\n\nconst saldo = pemasukan - pengeluaran;\nconst periodText = request.period === 'today' ? 'hari ini' :\n  request.period === 'week' ? 'minggu ini' :\n  request.period === 'year' ? 'tahun ' + request.year :\n  'bulan ' + monthName(request.month || (new Date().getMonth() + 1)) + ' ' + (request.year || new Date().getFullYear());\n\nlet title = '📊 Rekap ' + periodText;\nlet body = 'Transaksi: ' + count + '\\nPemasukan: ' + formatRp(pemasukan) + '\\nPengeluaran: ' + formatRp(pengeluaran) + '\\nSaldo: ' + formatRp(saldo);\n\nif (request.metric === 'pemasukan') body = 'Pemasukan ' + periodText + ': ' + formatRp(pemasukan) + '\\nTransaksi terkait: ' + count;\nif (request.metric === 'pengeluaran') body = 'Pengeluaran ' + periodText + ': ' + formatRp(pengeluaran) + '\\nTransaksi terkait: ' + count;\nif (request.metric === 'saldo') body = 'Saldo ' + periodText + ': ' + formatRp(saldo) + '\\nPemasukan: ' + formatRp(pemasukan) + '\\nPengeluaran: ' + formatRp(pengeluaran);\n\nreturn [{ json: { chat_id: request.chat_id, confirmation_text: title + '\\n\\n' + body } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5024,
+        976
+      ],
+      "id": "ba4ca147-9b2e-49e4-960c-0937ac0b8e6e",
+      "name": "Code: Jawab Query Database"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI",
+          "mode": "list",
+          "cachedResultName": "CASHFLOW",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1062799069,
+          "mode": "list",
+          "cachedResultName": "Transaksi",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit#gid=1062799069"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Tanggal": "={{ $json.tanggal }}",
+            "Jenis": "={{ $json.jenis }}",
+            "Kategori": "={{ $json.kategori }}",
+            "Item / Deskripsi": "={{ $json.item }}",
+            "Qty": "={{ $json.qty }}",
+            "Nominal": "={{ $json.nominal }}",
+            "Bulan (bantu rekap)": "={{ $json.bulan }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "No",
+              "displayName": "No",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tanggal",
+              "displayName": "Tanggal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Jenis",
+              "displayName": "Jenis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kategori",
+              "displayName": "Kategori",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Item / Deskripsi",
+              "displayName": "Item / Deskripsi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Qty",
+              "displayName": "Qty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nominal",
+              "displayName": "Nominal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Bulan (bantu rekap)",
+              "displayName": "Bulan (bantu rekap)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5120,
+        800
+      ],
+      "id": "4b928dfd-c093-49db-8bdd-3989c89db5dd",
+      "name": "Google Sheets: Catat Transaksi",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.confirmation_text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4992,
+        1184
+      ],
+      "id": "785776b1-affa-42ae-b943-65d98be285ec",
+      "name": "Telegram: Kirim Balasan",
+      "webhookId": "5559170d-7256-4a81-95ce-09d3c26e44eb",
+      "credentials": {
+        "telegramApi": {
+          "id": "8bxiNJ1AxhaDwrmI",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3248,
+        1472
+      ],
+      "id": "ee6d1968-f825-4122-ad04-ec155073b2c3",
+      "name": "Schedule: Akhir Bulan"
+    },
+    {
+      "parameters": {
+        "jsCode": "function todayParts() {\n  const now = new Date();\n  return { d: now.getDate(), m: now.getMonth() + 1, y: now.getFullYear(), date: now };\n}\n\nfunction pad2(value) {\n  return String(value).padStart(2, '0');\n}\n\nfunction todayStr() {\n  const t = todayParts();\n  return pad2(t.d) + '/' + pad2(t.m) + '/' + t.y;\n}\n\nfunction getChatId() {\n  return $('Telegram').item.json.message.chat.id;\n}\n\nfunction cleanText(value) {\n  if (value === undefined || value === null) return '';\n  if (typeof value !== 'string') return JSON.stringify(value);\n  return value\n    .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')\n    .replace(/<think>[\\s\\S]*/gi, '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96) + '(?:json)?', 'gi'), '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96), 'g'), '')\n    .trim();\n}\n\nfunction extractJsonCandidate(text) {\n  const cleaned = cleanText(text);\n  if (!cleaned) return '';\n  const start = cleaned.search(/[\\[{]/);\n  if (start === -1) return cleaned;\n  const open = cleaned[start];\n  const close = open === '{' ? '}' : ']';\n  let depth = 0;\n  let inString = false;\n  let escaped = false;\n  for (let i = start; i < cleaned.length; i++) {\n    const ch = cleaned[i];\n    if (escaped) {\n      escaped = false;\n      continue;\n    }\n    if (ch === '\\\\') {\n      escaped = true;\n      continue;\n    }\n    if (ch === '\"') {\n      inString = !inString;\n      continue;\n    }\n    if (inString) continue;\n    if (ch === open) depth++;\n    if (ch === close) depth--;\n    if (depth === 0) return cleaned.slice(start, i + 1);\n  }\n  return cleaned.slice(start);\n}\n\nfunction getAiText(item) {\n  const candidates = [\n    item.output,\n    item.text,\n    item.content,\n    item.response,\n    item.result,\n    item.message && item.message.content,\n    item.choices && item.choices[0] && item.choices[0].message && item.choices[0].message.content,\n  ];\n  for (const candidate of candidates) {\n    if (candidate !== undefined && candidate !== null && String(candidate).trim() !== '') return candidate;\n  }\n  return '';\n}\n\nfunction parseAiJson(item) {\n  const raw = getAiText(item);\n  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;\n  const candidate = extractJsonCandidate(raw);\n  if (!candidate) throw new Error('AI tidak mengembalikan JSON.');\n  return JSON.parse(candidate);\n}\n\nfunction str(value, fallback = '') {\n  if (value === undefined || value === null) return fallback;\n  const text = String(value).trim();\n  return text || fallback;\n}\n\nfunction normalizeDate(value) {\n  const text = str(value);\n  return text && text.toLowerCase() !== 'null' ? text : todayStr();\n}\n\nfunction parseDate(value) {\n  const text = str(value);\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\nfunction nominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  const original = str(value).toLowerCase();\n  const multiplier = /juta|jt/.test(original) ? 1000000 : /\\d\\s*k\\b|rb|ribu/.test(original) ? 1000 : 1;\n  if (multiplier > 1) {\n    const decimalText = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/\\./g, '').replace(/,/g, '.').replace(/[^0-9.\\-]/g, '');\n    const number = Number(decimalText);\n    return Number.isFinite(number) ? Math.max(0, Math.round(number * multiplier)) : 0;\n  }\n  const text = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/[^0-9,-]/g, '').replace(/,/g, '');\n  const number = Number(text);\n  return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;\n}\n\nfunction jenis(value, fallback = 'Pengeluaran') {\n  return /^pemasukan$/i.test(str(value)) ? 'Pemasukan' : fallback;\n}\n\nfunction bulanLabel(dateText) {\n  const d = parseDate(dateText) || new Date();\n  return String(d.getFullYear()) + '-' + pad2(d.getMonth() + 1);\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Number(value || 0).toLocaleString('id-ID');\n}\n\nconst data = $getWorkflowStaticData('global');\nconst now = new Date();\nconst target = new Date(now.getFullYear(), now.getMonth(), 0);\nreturn [{\n  json: {\n    chat_id: data.last_chat_id || '',\n    month: target.getMonth() + 1,\n    year: target.getFullYear(),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        1472
+      ],
+      "id": "5739be04-e0b5-4951-9874-68ae2a82b50e",
+      "name": "Code: Siapkan Bulan Rekap Otomatis"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI",
+          "mode": "list",
+          "cachedResultName": "CASHFLOW",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1062799069,
+          "mode": "list",
+          "cachedResultName": "Transaksi",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit#gid=1062799069"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3888,
+        1472
+      ],
+      "id": "b384cd14-f807-4fab-877f-668fa85b4e17",
+      "name": "Google Sheets: Baca Untuk Rekap",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function todayParts() {\n  const now = new Date();\n  return { d: now.getDate(), m: now.getMonth() + 1, y: now.getFullYear(), date: now };\n}\n\nfunction pad2(value) {\n  return String(value).padStart(2, '0');\n}\n\nfunction todayStr() {\n  const t = todayParts();\n  return pad2(t.d) + '/' + pad2(t.m) + '/' + t.y;\n}\n\nfunction getChatId() {\n  return $('Telegram').item.json.message.chat.id;\n}\n\nfunction cleanText(value) {\n  if (value === undefined || value === null) return '';\n  if (typeof value !== 'string') return JSON.stringify(value);\n  return value\n    .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')\n    .replace(/<think>[\\s\\S]*/gi, '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96) + '(?:json)?', 'gi'), '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96), 'g'), '')\n    .trim();\n}\n\nfunction extractJsonCandidate(text) {\n  const cleaned = cleanText(text);\n  if (!cleaned) return '';\n  const start = cleaned.search(/[\\[{]/);\n  if (start === -1) return cleaned;\n  const open = cleaned[start];\n  const close = open === '{' ? '}' : ']';\n  let depth = 0;\n  let inString = false;\n  let escaped = false;\n  for (let i = start; i < cleaned.length; i++) {\n    const ch = cleaned[i];\n    if (escaped) {\n      escaped = false;\n      continue;\n    }\n    if (ch === '\\\\') {\n      escaped = true;\n      continue;\n    }\n    if (ch === '\"') {\n      inString = !inString;\n      continue;\n    }\n    if (inString) continue;\n    if (ch === open) depth++;\n    if (ch === close) depth--;\n    if (depth === 0) return cleaned.slice(start, i + 1);\n  }\n  return cleaned.slice(start);\n}\n\nfunction getAiText(item) {\n  const candidates = [\n    item.output,\n    item.text,\n    item.content,\n    item.response,\n    item.result,\n    item.message && item.message.content,\n    item.choices && item.choices[0] && item.choices[0].message && item.choices[0].message.content,\n  ];\n  for (const candidate of candidates) {\n    if (candidate !== undefined && candidate !== null && String(candidate).trim() !== '') return candidate;\n  }\n  return '';\n}\n\nfunction parseAiJson(item) {\n  const raw = getAiText(item);\n  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;\n  const candidate = extractJsonCandidate(raw);\n  if (!candidate) throw new Error('AI tidak mengembalikan JSON.');\n  return JSON.parse(candidate);\n}\n\nfunction str(value, fallback = '') {\n  if (value === undefined || value === null) return fallback;\n  const text = String(value).trim();\n  return text || fallback;\n}\n\nfunction normalizeDate(value) {\n  const text = str(value);\n  return text && text.toLowerCase() !== 'null' ? text : todayStr();\n}\n\nfunction parseDate(value) {\n  const text = str(value);\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\nfunction nominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  const original = str(value).toLowerCase();\n  const multiplier = /juta|jt/.test(original) ? 1000000 : /\\d\\s*k\\b|rb|ribu/.test(original) ? 1000 : 1;\n  if (multiplier > 1) {\n    const decimalText = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/\\./g, '').replace(/,/g, '.').replace(/[^0-9.\\-]/g, '');\n    const number = Number(decimalText);\n    return Number.isFinite(number) ? Math.max(0, Math.round(number * multiplier)) : 0;\n  }\n  const text = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/[^0-9,-]/g, '').replace(/,/g, '');\n  const number = Number(text);\n  return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;\n}\n\nfunction jenis(value, fallback = 'Pengeluaran') {\n  return /^pemasukan$/i.test(str(value)) ? 'Pemasukan' : fallback;\n}\n\nfunction bulanLabel(dateText) {\n  const d = parseDate(dateText) || new Date();\n  return String(d.getFullYear()) + '-' + pad2(d.getMonth() + 1);\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Number(value || 0).toLocaleString('id-ID');\n}\n\nconst request = $('Code: Siapkan Bulan Rekap Otomatis').item.json;\nconst rows = $input.all().map((item) => item.json);\nlet pemasukan = 0;\nlet pengeluaran = 0;\nlet count = 0;\nfor (const row of rows) {\n  const date = parseDate(row.Tanggal || row.tanggal);\n  if (!date || date.getMonth() + 1 !== request.month || date.getFullYear() !== request.year) continue;\n  const value = nominal(row.Nominal || row.nominal);\n  const rowJenis = str(row.Jenis || row.jenis);\n  if (/pemasukan/i.test(rowJenis)) pemasukan += value;\n  if (/pengeluaran/i.test(rowJenis)) pengeluaran += value;\n  count++;\n}\nconst saldo = pemasukan - pengeluaran;\nconst bulan = request.year + '-' + pad2(request.month);\nreturn [{\n  json: {\n    chat_id: request.chat_id,\n    bulan,\n    total_transaksi: count,\n    pemasukan,\n    pengeluaran,\n    saldo,\n    sumber: 'Rekap-Otomatis',\n    confirmation_text: '📌 Rekap otomatis ' + bulan + '\\n\\nTransaksi: ' + count + '\\nPemasukan: ' + formatRp(pemasukan) + '\\nPengeluaran: ' + formatRp(pengeluaran) + '\\nSaldo: ' + formatRp(saldo),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4112,
+        1472
+      ],
+      "id": "97ac1769-17ca-416e-8329-d1c6e2de8684",
+      "name": "Code: Hitung Rekap Bulanan"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI",
+          "mode": "list",
+          "cachedResultName": "CASHFLOW",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Rekap Bulanan",
+          "mode": "name",
+          "cachedResultName": "Rekap Bulanan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M8Z4qDUtY54f1Wa4WSo2TI50bdXnI-NmbOoWXdtYiyY/edit?usp=drivesdk"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Bulan": "={{ $json.bulan }}",
+            "Total Transaksi": "={{ Number($json.total_transaksi || 0) }}",
+            "Pemasukan": "={{ Number($json.pemasukan || 0) }}",
+            "Pengeluaran": "={{ Number($json.pengeluaran || 0) }}",
+            "Saldo": "={{ Number($json.saldo || 0) }}",
+            "Sumber": "={{ $json.sumber || \"Rekap-Otomatis\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Bulan",
+              "displayName": "Bulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Transaksi",
+              "displayName": "Total Transaksi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pemasukan",
+              "displayName": "Pemasukan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pengeluaran",
+              "displayName": "Pengeluaran",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Saldo",
+              "displayName": "Saldo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sumber",
+              "displayName": "Sumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4368,
+        1360
+      ],
+      "id": "33f978b3-71f0-4498-8cf2-1f0add086e06",
+      "name": "Google Sheets: Simpan Rekap Bulanan",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!$json.chat_id) {\n  return [];\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4368,
+        1536
+      ],
+      "id": "0f3ce755-17c1-45a2-b1ef-e2bef5e125ec",
+      "name": "Code: Cek Chat Rekap"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3200,
+        976
+      ],
+      "id": "de1f130a-6596-489e-8c12-42b996f587be",
+      "name": "Telegram",
+      "webhookId": "496841e8-8e58-4a45-9923-c63f9e85445c",
+      "credentials": {
+        "telegramApi": {
+          "id": "8bxiNJ1AxhaDwrmI",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $getWorkflowStaticData('global');\ndata.last_chat_id = $json.message.chat.id;\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3376,
+        976
+      ],
+      "id": "eb52c66f-7d25-40e7-93e0-4d81f1967b4c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[2].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3856,
+        816
+      ],
+      "id": "59b1b732-cf72-4421-9fc9-c43d9d72faa1",
+      "name": "Foto",
+      "webhookId": "c783b317-946d-41d0-9d4d-2e9f389b871e",
+      "credentials": {
+        "telegramApi": {
+          "id": "8bxiNJ1AxhaDwrmI",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function todayParts() {\n  const now = new Date();\n  return { d: now.getDate(), m: now.getMonth() + 1, y: now.getFullYear(), date: now };\n}\n\nfunction pad2(value) {\n  return String(value).padStart(2, '0');\n}\n\nfunction todayStr() {\n  const t = todayParts();\n  return pad2(t.d) + '/' + pad2(t.m) + '/' + t.y;\n}\n\nfunction getChatId() {\n  return $('Telegram').item.json.message.chat.id;\n}\n\nfunction cleanText(value) {\n  if (value === undefined || value === null) return '';\n  if (typeof value !== 'string') return JSON.stringify(value);\n  return value\n    .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')\n    .replace(/<think>[\\s\\S]*/gi, '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96) + '(?:json)?', 'gi'), '')\n    .replace(new RegExp(String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96), 'g'), '')\n    .trim();\n}\n\nfunction extractJsonCandidate(text) {\n  const cleaned = cleanText(text);\n  if (!cleaned) return '';\n  const start = cleaned.search(/[\\[{]/);\n  if (start === -1) return cleaned;\n  const open = cleaned[start];\n  const close = open === '{' ? '}' : ']';\n  let depth = 0;\n  let inString = false;\n  let escaped = false;\n  for (let i = start; i < cleaned.length; i++) {\n    const ch = cleaned[i];\n    if (escaped) {\n      escaped = false;\n      continue;\n    }\n    if (ch === '\\\\') {\n      escaped = true;\n      continue;\n    }\n    if (ch === '\"') {\n      inString = !inString;\n      continue;\n    }\n    if (inString) continue;\n    if (ch === open) depth++;\n    if (ch === close) depth--;\n    if (depth === 0) return cleaned.slice(start, i + 1);\n  }\n  return cleaned.slice(start);\n}\n\nfunction getAiText(item) {\n  const candidates = [\n    item.output,\n    item.text,\n    item.content,\n    item.response,\n    item.result,\n    item.message && item.message.content,\n    item.choices && item.choices[0] && item.choices[0].message && item.choices[0].message.content,\n  ];\n  for (const candidate of candidates) {\n    if (candidate !== undefined && candidate !== null && String(candidate).trim() !== '') return candidate;\n  }\n  return '';\n}\n\nfunction parseAiJson(item) {\n  const raw = getAiText(item);\n  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;\n  const candidate = extractJsonCandidate(raw);\n  if (!candidate) throw new Error('AI tidak mengembalikan JSON.');\n  return JSON.parse(candidate);\n}\n\nfunction str(value, fallback = '') {\n  if (value === undefined || value === null) return fallback;\n  const text = String(value).trim();\n  return text || fallback;\n}\n\nfunction normalizeDate(value) {\n  const text = str(value);\n  return text && text.toLowerCase() !== 'null' ? text : todayStr();\n}\n\nfunction parseDate(value) {\n  const text = str(value);\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\nfunction nominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  const original = str(value).toLowerCase();\n  const multiplier = /juta|jt/.test(original) ? 1000000 : /\\d\\s*k\\b|rb|ribu/.test(original) ? 1000 : 1;\n  if (multiplier > 1) {\n    const decimalText = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/\\./g, '').replace(/,/g, '.').replace(/[^0-9.\\-]/g, '');\n    const number = Number(decimalText);\n    return Number.isFinite(number) ? Math.max(0, Math.round(number * multiplier)) : 0;\n  }\n  const text = original.replace(/rp/gi, '').replace(/\\s/g, '').replace(/[^0-9,-]/g, '').replace(/,/g, '');\n  const number = Number(text);\n  return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;\n}\n\nfunction jenis(value, fallback = 'Pengeluaran') {\n  return /^pemasukan$/i.test(str(value)) ? 'Pemasukan' : fallback;\n}\n\nfunction bulanLabel(dateText) {\n  const d = parseDate(dateText) || new Date();\n  return String(d.getFullYear()) + '-' + pad2(d.getMonth() + 1);\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Number(value || 0).toLocaleString('id-ID');\n}\n\ntry {\n  const parsed = parseAiJson($input.item.json);\n  const items = Array.isArray(parsed.items) ? parsed.items : [];\n  const tanggal = normalizeDate(parsed.tanggal);\n  const sourceJenis = jenis(parsed.jenis);\n  const kategori = str(parsed.kategori, sourceJenis === 'Pemasukan' ? 'Penjualan Harian' : 'Lainnya');\n  const toko = str(parsed.toko);\n\n  const rows = items\n    .map((entry) => ({\n      tanggal,\n      jenis: sourceJenis,\n      kategori,\n      item: str(entry.nama_item || entry.item || entry.deskripsi || toko, 'Transaksi Foto'),\n      qty: str(entry.qty),\n      nominal: nominal(entry.nominal || entry.harga || entry.total),\n      sumber: 'Telegram-Foto',\n      bulan: bulanLabel(tanggal),\n    }))\n    .filter((row) => row.item && row.nominal > 0);\n\n  if (rows.length === 0) throw new Error('Tidak ada transaksi valid yang terbaca dari foto.');\n  const total = rows.reduce((sum, row) => sum + row.nominal, 0);\n  const daftar = rows.map((row) => '• ' + row.item + (row.qty ? ' (' + row.qty + ')' : '') + ' — ' + formatRp(row.nominal)).join('\\n');\n\n  return [{\n    json: {\n      action: 'photo_transaction',\n      is_valid: true,\n      rows,\n      chat_id: getChatId(),\n      confirmation_text: '✅ OKE BOS DATA Tercatat ' + rows.length + ' item' + (toko ? ' dari ' + toko : '') + '\\n\\n' + daftar + '\\n\\nTotal: ' + formatRp(total),\n    },\n  }];\n} catch (error) {\n  return [{\n    json: {\n      action: 'help',\n      is_valid: false,\n      chat_id: getChatId(),\n      confirmation_text: '⚠️ Foto belum disimpan. ' + error.message + '\\n\\nMohon kirim ulang foto yang lebih jelas.',\n    },\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4336,
+        816
+      ],
+      "id": "4f4b6ee5-133b-4489-8d59-41595bb7d579",
+      "name": "foto"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        4048,
+        944
+      ],
+      "id": "2ebf630f-5f58-4847-9e0d-359bec3030f3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "j8EjtPOeKp6ErW4S",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "serviceAccount",
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "GANTI_DENGAN_LABEL_ID_NOTIF_SHOPEE"
+          ]
+        },
+        "options": {}
+      },
+      "id": "a05608a1-f29c-4e1f-94b7-fb34cc83e189",
+      "name": "Cek Email Shopee",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        4768,
+        1472
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// PENTING: sesuaikan pola regex di bawah ini dengan format ASLI email notifikasi Shopee lo.\n// Kirim contoh isi email ke Claude kalau butuh bantuan menyesuaikan.\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const emailBody = item.json.text || item.json.snippet || '';\n\n  const namaMatch = emailBody.match(/Nama Pembeli\\s*[:\\-]?\\s*(.+)/i);\n  const jumlahMatch = emailBody.match(/Total Pembayaran\\s*[:\\-]?\\s*Rp?\\s*([\\d.,]+)/i);\n  const orderIdMatch = emailBody.match(/No\\.?\\s*Pesanan\\s*[:\\-]?\\s*([A-Z0-9]+)/i);\n\n  const now = new Date();\n\n  results.push({\n    json: {\n      marketplace: 'Shopee',\n      nama_customer: namaMatch ? namaMatch[1].trim() : 'Tidak diketahui',\n      jumlah_bayar: jumlahMatch ? jumlahMatch[1].replace(/\\./g, '').replace(',', '.') : '0',\n      order_id: orderIdMatch ? orderIdMatch[1].trim() : '-',\n      tanggal: now.toISOString().split('T')[0],\n      waktu: now.toLocaleTimeString('id-ID')\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "694385d9-44f5-48c3-8c44-1d176e8c875f",
+      "name": "Ekstrak Data Pembayaran",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4928,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "GANTI_DENGAN_CHAT_ID_TELEGRAM",
+        "text": "=🔔 Pembayaran Masuk!\nMarketplace: {{ $json.marketplace }}\nCustomer: {{ $json.nama_customer }}\nJumlah: Rp{{ $json.jumlah_bayar }}\nOrder ID: {{ $json.order_id }}\nWaktu: {{ $json.waktu }}",
+        "additionalFields": {}
+      },
+      "id": "8a5356e6-225f-495c-bad5-6e3a69d0f674",
+      "name": "Kirim Alert Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5120,
+        1376
+      ],
+      "webhookId": "b7d97e71-818f-4ac0-bb3f-e1ddc47e5c31",
+      "credentials": {
+        "telegramApi": {
+          "id": "MDvWxV2RtuJHUx1V",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "GANTI_DENGAN_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Tanggal": "={{ $json.tanggal }}",
+            "Waktu": "={{ $json.waktu }}",
+            "Marketplace": "={{ $json.marketplace }}",
+            "Nama Customer": "={{ $json.nama_customer }}",
+            "Jumlah Bayar": "={{ $json.jumlah_bayar }}",
+            "Order ID": "={{ $json.order_id }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "e46bd515-27af-4889-8feb-969cc5b292cf",
+      "name": "Simpan ke Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        5232,
+        1568
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 320,
+        "width": 1488
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3184,
+        1344
+      ],
+      "typeVersion": 1,
+      "id": "cd98e572-aaf0-45e5-89bd-713cac0b43c3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 544,
+        "width": 2224,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3152,
+        800
+      ],
+      "typeVersion": 1,
+      "id": "8b65b519-81dd-4f27-8ad3-7b2fc3d32164",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "\n",
+        "height": 336,
+        "width": 704,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4672,
+        1344
+      ],
+      "typeVersion": 1,
+      "id": "5c4a6fab-5878-4589-aa6c-e8e0bd5bf6c9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtMinute": 21
+            }
+          ]
+        }
+      },
+      "id": "d52a9a83-ff1f-454f-ba37-23f8b0baf783",
+      "name": "Dashboard: Jadwal Harian 23.59",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3232,
+        1776
+      ],
+      "disabled": true,
+      "notes": "Berjalan otomatis tiap hari jam 22.00. Ubah angka '59 23' jika ingin jam lain (format: menit jam)."
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI",
+          "mode": "list",
+          "cachedResultName": "CASHFLOW",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1062799069,
+          "mode": "list",
+          "cachedResultName": "Transaksi",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit#gid=1062799069"
+        },
+        "options": {}
+      },
+      "id": "ed76f834-aa5b-45e4-9a18-03cd024c3099",
+      "name": "Dashboard: Baca Transaksi",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3584,
+        1776
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      },
+      "notes": "Membaca seluruh sheet Transaksi. Filter tanggal hari ini dilakukan di node berikutnya."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// DAILY BUSINESS DASHBOARD - Hitung Metrik\n// ============================================================\n// KONFIGURASI - ubah sesuai kebutuhan (hanya bagian ini)\nconst MARGIN = 0.30;              // 0.30 = margin profit 30%\nconst KOLOM_NOMINAL = 'Nominal';  // nama kolom nominal di sheet\nconst KOLOM_TANGGAL = 'Tanggal';  // nama kolom tanggal di sheet\nconst KOLOM_JENIS   = 'Jenis';    // nama kolom jenis di sheet\n// ============================================================\n\nfunction pad2(v) { return String(v).padStart(2, '0'); }\n\nfunction parseDate(value) {\n  const text = String(value || '').trim();\n  let m = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));\n  m = text.match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);\n  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n  return null;\n}\n\nfunction isToday(dateStr) {\n  const d = parseDate(dateStr);\n  if (!d) return false;\n  const now = new Date();\n  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();\n}\n\nfunction parseNominal(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));\n  const text = String(value || '').replace(/rp/gi, '').replace(/[^0-9]/g, '');\n  const n = Number(text);\n  return Number.isFinite(n) ? Math.max(0, n) : 0;\n}\n\nfunction formatRp(value) {\n  return 'Rp' + Math.round(value || 0).toLocaleString('id-ID');\n}\n\nconst rows = $input.all();\nconst now = new Date();\nconst tanggal = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\nconst tanggalShort = pad2(now.getDate()) + '/' + pad2(now.getMonth() + 1) + '/' + now.getFullYear();\n\n// Filter: hanya Pemasukan dengan tanggal hari ini\nconst orders = rows\n  .filter(r => {\n    const jenis = String(r.json[KOLOM_JENIS] || '').toLowerCase();\n    return isToday(r.json[KOLOM_TANGGAL]) && jenis.includes('pemasukan');\n  })\n  .map(r => parseNominal(r.json[KOLOM_NOMINAL]))\n  .filter(v => v > 0);\n\n// Jika tidak ada transaksi hari ini\nif (orders.length === 0) {\n  return [{ json: {\n    tanggal, tanggal_short: tanggalShort,\n    total_order: 0,\n    total_revenue_raw: 0,  total_revenue: 'Rp0',\n    estimasi_modal_raw: 0, estimasi_modal: 'Rp0',\n    estimasi_profit_raw: 0, estimasi_profit: 'Rp0',\n    average_order_raw: 0,  average_order: 'Rp0',\n    order_terbesar_raw: 0, order_terbesar: 'Rp0',\n    order_terkecil_raw: 0, order_terkecil: 'Rp0',\n    margin_persen: Math.round(MARGIN * 100),\n    ada_data: false\n  }}];\n}\n\n// Hitung 7 metrik\nconst totalRevenue   = orders.reduce((a, b) => a + b, 0);\nconst totalOrder     = orders.length;\nconst averageOrder   = totalRevenue / totalOrder;\nconst orderTerbesar  = Math.max(...orders);\nconst orderTerkecil  = Math.min(...orders);\nconst estimasiModal  = totalRevenue * (1 - MARGIN);\nconst estimasiProfit = totalRevenue * MARGIN;\n\nreturn [{ json: {\n  tanggal, tanggal_short: tanggalShort,\n  total_order: totalOrder,\n  total_revenue_raw:   Math.round(totalRevenue),   total_revenue:   formatRp(totalRevenue),\n  estimasi_modal_raw:  Math.round(estimasiModal),  estimasi_modal:  formatRp(estimasiModal),\n  estimasi_profit_raw: Math.round(estimasiProfit), estimasi_profit: formatRp(estimasiProfit),\n  average_order_raw:   Math.round(averageOrder),   average_order:   formatRp(averageOrder),\n  order_terbesar_raw:  Math.round(orderTerbesar),  order_terbesar:  formatRp(orderTerbesar),\n  order_terkecil_raw:  Math.round(orderTerkecil),  order_terkecil:  formatRp(orderTerkecil),\n  margin_persen: Math.round(MARGIN * 100),\n  ada_data: true\n}}];"
+      },
+      "id": "935f5050-4fb6-4f28-a1be-540e7799b017",
+      "name": "Dashboard: Hitung Metrik",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3936,
+        1776
+      ],
+      "notes": "Menghitung 7 metrik bisnis. Ubah MARGIN di bagian KONFIGURASI paling atas kode."
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI",
+          "mode": "list",
+          "cachedResultName": "CASHFLOW",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 293544574,
+          "mode": "list",
+          "cachedResultName": "Dashboard Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14TTUMZfYBHD3VHySOHc7Q1c0POXngQbrKT7VeDA1IzI/edit#gid=293544574"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tanggal",
+              "displayName": "tanggal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tanggal_short",
+              "displayName": "tanggal_short",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "total_order",
+              "displayName": "total_order",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_revenue_raw",
+              "displayName": "total_revenue_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "total_revenue",
+              "displayName": "total_revenue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estimasi_modal_raw",
+              "displayName": "estimasi_modal_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estimasi_modal",
+              "displayName": "estimasi_modal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estimasi_profit_raw",
+              "displayName": "estimasi_profit_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estimasi_profit",
+              "displayName": "estimasi_profit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "average_order_raw",
+              "displayName": "average_order_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "average_order",
+              "displayName": "average_order",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_terbesar_raw",
+              "displayName": "order_terbesar_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_terbesar",
+              "displayName": "order_terbesar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_terkecil_raw",
+              "displayName": "order_terkecil_raw",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_terkecil",
+              "displayName": "order_terkecil",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "margin_persen",
+              "displayName": "margin_persen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ada_data",
+              "displayName": "ada_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "1886fe62-a30d-4f37-9c64-0fbd668cdac7",
+      "name": "Dashboard: Simpan Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4352,
+        1680
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "jackscoot"
+        }
+      },
+      "notes": "Menyimpan histori dashboard ke sheet 'Dashboard Log'. Buat sheet ini dulu di Google Sheets."
+    },
+    {
+      "parameters": {
+        "chatId": "5514434785",
+        "text": "={{ $json.ada_data\n  ? '📊 *DAILY BUSINESS DASHBOARD*\\n' +\n    '📅 ' + $json.tanggal + '\\n' +\n    '━━━━━━━━━━━━━━━━━━━━\\n' +\n    '📦 Total Order      : ' + $json.total_order + ' transaksi\\n' +\n    '💰 Total Revenue    : ' + $json.total_revenue + '\\n' +\n    '🏷 Estimasi Modal   : ' + $json.estimasi_modal + '\\n' +\n    '📈 Estimasi Profit  : ' + $json.estimasi_profit + '\\n' +\n    '━━━━━━━━━━━━━━━━━━━━\\n' +\n    '📊 Rata-rata Order  : ' + $json.average_order + '\\n' +\n    '🔝 Order Terbesar   : ' + $json.order_terbesar + '\\n' +\n    '🔻 Order Terkecil   : ' + $json.order_terkecil + '\\n' +\n    '━━━━━━━━━━━━━━━━━━━━\\n' +\n    '💡 _Margin estimasi: ' + $json.margin_persen + '%_'\n  : '📊 *DAILY BUSINESS DASHBOARD*\\n' +\n    '📅 ' + $json.tanggal + '\\n' +\n    '━━━━━━━━━━━━━━━━━━━━\\n' +\n    '⚠️ _Tidak ada transaksi pemasukan hari ini._'\n}}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "d2bf9d1b-01af-46cb-9ef3-39e0b6f1037f",
+      "name": "Dashboard: Kirim Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4352,
+        1824
+      ],
+      "webhookId": "9a3b4126-b875-4a11-91c9-a374da4aae8b",
+      "credentials": {
+        "telegramApi": {
+          "id": "tjZM6ozjOFHlpjsD",
+          "name": "Telegram account 4"
+        }
+      },
+      "notes": "GANTI 'GANTI_DENGAN_CHAT_ID_TELEGRAM' dengan Chat ID Anda (cari via @userinfobot)."
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 336,
+        "width": 1488,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3184,
+        1664
+      ],
+      "typeVersion": 1,
+      "id": "ed3e4c9c-3784-4211-a3a4-447d27ef2811",
+      "name": "Sticky Note Dashboard"
+    },
+    {
+      "parameters": {
+        "chatId": "5514434785",
+        "text": "={{ $json.result.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5200,
+        1184
+      ],
+      "id": "83fa1d2e-0c16-48e9-83f9-b8fcc925306e",
+      "name": "Send a text message",
+      "webhookId": "8ab4ff6f-2849-4535-8cd0-60c030ee4f9e",
+      "credentials": {
+        "telegramApi": {
+          "id": "tjZM6ozjOFHlpjsD",
+          "name": "Telegram account 4"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.result.file_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        4272,
+        992
+      ],
+      "id": "aece7dcf-3800-4589-b047-e38cc400b089",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        3888,
+        1264
+      ],
+      "id": "5b8180bc-6d4f-4b7c-b822-c3ba759e7f5a",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "chatId": "5514434785",
+        "text": "={{ $json.result.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4544,
+        1824
+      ],
+      "id": "27435eb3-b423-40e3-9242-4f92445d8173",
+      "name": "Send a text message1",
+      "webhookId": "8ab4ff6f-2849-4535-8cd0-60c030ee4f9e",
+      "credentials": {
+        "telegramApi": {
+          "id": "tjZM6ozjOFHlpjsD",
+          "name": "Telegram account 4"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Ada Foto?": {
+      "main": [
+        [
+          {
+            "node": "Foto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent: Pahami Pesan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent: Baca Foto": {
+      "main": [
+        [
+          {
+            "node": "foto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Foto Valid?": {
+      "main": [
+        [
+          {
+            "node": "Split Out: Item Foto",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram: Kirim Balasan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Kirim Balasan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out: Item Foto": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Catat Transaksi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent: Pahami Pesan": {
+      "main": [
+        [
+          {
+            "node": "Code: Parse Perintah / Transaksi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model: Teks": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent: Pahami Pesan",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Parse Perintah / Transaksi": {
+      "main": [
+        [
+          {
+            "node": "Apakah Query Database?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apakah Query Database?": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Baca Transaksi",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Apakah Transaksi Teks?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apakah Transaksi Teks?": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Catat Transaksi",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram: Kirim Balasan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Kirim Balasan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Baca Transaksi": {
+      "main": [
+        [
+          {
+            "node": "Code: Jawab Query Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Jawab Query Database": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Kirim Balasan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule: Akhir Bulan": {
+      "main": [
+        [
+          {
+            "node": "Code: Siapkan Bulan Rekap Otomatis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Bulan Rekap Otomatis": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Baca Untuk Rekap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Baca Untuk Rekap": {
+      "main": [
+        [
+          {
+            "node": "Code: Hitung Rekap Bulanan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Hitung Rekap Bulanan": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Simpan Rekap Bulanan",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code: Cek Chat Rekap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Cek Chat Rekap": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Kirim Balasan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Ada Foto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Foto": {
+      "main": [
+        [
+          {
+            "node": "AI Agent: Baca Foto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "foto": {
+      "main": [
+        [
+          {
+            "node": "Data Foto Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent: Baca Foto",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cek Email Shopee": {
+      "main": [
+        [
+          {
+            "node": "Ekstrak Data Pembayaran",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ekstrak Data Pembayaran": {
+      "main": [
+        [
+          {
+            "node": "Kirim Alert Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Simpan ke Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard: Jadwal Harian 23.59": {
+      "main": [
+        [
+          {
+            "node": "Dashboard: Baca Transaksi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard: Baca Transaksi": {
+      "main": [
+        [
+          {
+            "node": "Dashboard: Hitung Metrik",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard: Hitung Metrik": {
+      "main": [
+        [
+          {
+            "node": "Dashboard: Simpan Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Dashboard: Kirim Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Kirim Balasan": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent: Baca Foto",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent: Pahami Pesan",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard: Kirim Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule: Akhir Bulan": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    },
+    "node:Dashboard: Jadwal Harian 23.59": {
+      "recurrenceRules": []
+    },
+    "node:Cek Email Shopee": {
+      "Cek Email Shopee": {
+        "lastTimeChecked": 1783347346
+      }
+    },
+    "global": {
+      "last_chat_id: '***'
+    }
+  },
+  "pinData": {},
+  "triggerCount": 2,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  }
+}

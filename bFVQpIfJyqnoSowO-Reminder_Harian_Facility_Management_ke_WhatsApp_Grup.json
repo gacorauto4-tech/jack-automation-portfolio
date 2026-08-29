@@ -1,0 +1,305 @@
+{
+  "name": "Reminder Harian Facility Management ke WhatsApp Grup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "c853c815-8ef8-4f30-ab79-829beb3aaa13",
+      "name": "Setiap Hari Jam 9 Pagi",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        304
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const daftarTopik = [\n  'KESELAMATAN KERJA — APAR & Kesiapsiagaan Kebakaran Gedung (jenis APAR, teknik PASS, titik penempatan, inspeksi rutin)',\n  'KEAMANAN — SOP Patroli Satpam & Serah Terima Shift (jadwal patroli, titik kontrol, buku mutasi, laporan temuan)',\n  'KESELAMATAN KERJA — Instalasi Listrik & Panel Gedung (kabel terkelupas, stop kontak bertumpuk, LOTO, panel terkunci)',\n  'KESELAMATAN KERJA — Bekerja di Ketinggian (perawatan AC, penggantian lampu, rooftop, tangga & body harness)',\n  'KESELAMATAN KERJA — Ruang Genset & Ruang Terbatas (gas buang, ventilasi, kebisingan, prosedur confined space)',\n  'KESELAMATAN KERJA — Housekeeping 5R & Pencegahan Terpeleset/Tersandung/Terjatuh (lantai basah, kabel melintang)',\n  'KESELAMATAN KERJA — Alat Pelindung Diri untuk Teknisi & Vendor (helm, sepatu safety, rompi, sarung tangan, kacamata)',\n  'KESELAMATAN KERJA — Keselamatan Lift & Prosedur Saat Terjebak di Dalam Lift (jangan panik, tombol darurat, tunggu teknisi)',\n\n  'KESEHATAN KERJA — Ergonomi & Postur Kerja di Meja Kantor (posisi duduk, tinggi monitor, sandaran, peregangan berkala)',\n  'KESEHATAN KERJA — Kesehatan Mata & Kelelahan Digital (aturan 20-20-20, pencahayaan, silau layar)',\n  'KESEHATAN KERJA — Kualitas Udara Dalam Ruangan & Perawatan HVAC (filter AC, sirkulasi udara, jamur, bau)',\n  'KESEHATAN KERJA — Kebersihan Pantry, Air Minum & Keamanan Pangan (dispenser, kulkas bersama, makanan basi)',\n  'KESEHATAN KERJA — Kesehatan Mental & Manajemen Stres Kerja (beban kerja, istirahat, tanda kelelahan, minta bantuan)',\n  'KESEHATAN KERJA — Kebisingan & Perlindungan Pendengaran di Area Mesin/Genset (ear plug, durasi paparan)',\n  'KESEHATAN KERJA — Bahan Kimia Pembersih & Sanitasi (MSDS, pelabelan, jangan mencampur, ventilasi, sarung tangan)',\n  'KESEHATAN KERJA — P3K, Kotak Obat & Penanganan Cedera Ringan/Pingsan (isi kotak P3K, langkah awal, siapa dihubungi)',\n\n  'KEAMANAN — Pemantauan CCTV & Pelaporan Anomali (blind spot, pengecekan rekaman, eskalasi temuan)',\n  'KEAMANAN — Pengendalian Akses Tamu, Vendor & Area Terbatas (buku tamu, kartu identitas, pendampingan, tailgating)',\n  'KEAMANAN — Pengamanan Kunci, Aset & Ruang Vital (ruang server, panel, brankas, serah terima kunci)',\n  'KEAMANAN — Kewaspadaan Orang Asing & Social Engineering (modus penipuan, vendor palsu, mengaku petugas)',\n  'KEAMANAN — Keamanan Kendaraan & Area Parkir (kunci ganda, barang berharga di kabin, pengawasan area)',\n  'KEAMANAN — Clean Desk & Keamanan Data di Lingkungan Kerja (dokumen tertinggal, layar terbuka, badge, print-an)',\n  'KEAMANAN — Tanggap Darurat & Pelaporan Insiden (rantai komando, nomor darurat, kronologi laporan yang benar)',\n  'KEAMANAN — Keselamatan Berkendara & Perjalanan Dinas (kelelahan menyetir, helm, sabuk pengaman, cek kendaraan)'\n];\n\nconst daftarGaya = [\n  'CHECKLIST HARIAN — sajikan sebagai daftar tindakan konkret yang bisa langsung dicek dan dikerjakan hari ini.',\n  'STUDI KASUS SINGKAT — hook berisi satu skenario insiden yang masuk akal di gedung perkantoran; kelima poin berisi pelajaran yang ditarik darinya.',\n  'MITOS vs FAKTA — tiap poin membongkar satu anggapan keliru yang umum, lalu meluruskannya.',\n  'DO & DON\\'T — tiap poin tegas menyatakan apa yang harus dipastikan atau apa yang harus dihindari.',\n  'DAMPAK & KONSEKUENSI — tiap poin menjelaskan akibat nyata bila diabaikan, dari sudut pandang yang berbeda-beda.'\n];\n\nconst cfg = $('Konfigurasi').first().json;\nconst now = new Date();\nconst startOfYear = new Date(now.getFullYear(), 0, 0);\nconst dayOfYear = Math.floor((now - startOfYear) / 86400000);\n\nconst ov = cfg.overrideIndex;\nconst pakaiOverride = ov !== '' && ov !== null && ov !== undefined && !isNaN(Number(ov));\nconst idx = pakaiOverride ? Number(ov) : dayOfYear;\n\nconst topikTerpilih = daftarTopik[idx % daftarTopik.length];\nconst gayaTerpilih = daftarGaya[idx % daftarGaya.length];\nconst pilar = topikTerpilih.split('—')[0].trim();\nconst labelGaya = gayaTerpilih.split('—')[0].trim();\nconst tanggalHariIni = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nreturn [{ json: { topikTerpilih, gayaTerpilih, pilar, labelGaya, tanggalHariIni, idx, pakaiOverride } }];"
+      },
+      "id": "25dcc759-6ad7-4945-b8c5-6570375b2231",
+      "name": "Pilih Topik Hari Ini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-NANO"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Anda adalah Tim Facility Management perusahaan telekomunikasi besar di Indonesia. Tiga pilar Anda: KESELAMATAN KERJA, KESEHATAN KERJA, KEAMANAN — di lingkungan gedung perkantoran dan fasilitas pendukungnya (ruang server, genset, HVAC, lift, area parkir, pantry, vendor,satpam).\n\nAnda menulis reminder harian untuk grup WhatsApp internal. Panjang ideal: tuntas dibaca dalam 30 detik.\n\nURUTAN MENULIS — WAJIB DIPATUHI:\nTulis \"poin\" LEBIH DULU. Baru setelah kelima poin selesai, tulis \"judul\" yang benar-benar menggambarkan isi poin tersebut. Judul yang dikarang sebelum poin selalu meleset.\n\nNADA — PALING PENTING:\nTulis seperti rekan kerja yang benar-benar peduli, bukan mesin yang sedang memenuhi kewajiban. Kalimat yang dipotong-potong justru terbaca seperti terpaksa. Biarkan kalimat utuh dan mengalir wajar.\n\n⚠️ LARANGAN PALING KERAS — JANGAN MENGARANG INSIDEN:\nAnda TIDAK TAHU apa pun yang benar-benar terjadi di kantor ini. DILARANG MUTLAK menulis seolah suatu insiden pernah terjadi. Frasa seperti 'beberapa karyawan sempat terpeleset', 'baru-baru ini terjadi', 'dilaporkan bahwa' adalah KEBOHONGAN.\n- Hook: tulis situasi UMUM atau akibat konkret. BENAR: 'Lantai pantry yang basah sepuluh detik saja sudah cukup membuat orang jatuh.' SALAH: 'Beberapa karyawan sempat terpeleset di pantry.'\n- Hanya gaya STUDI KASUS yang boleh berandai, WAJIB diawali 'Bayangkan:' atau 'Misalkan:'.\n- DILARANG mengarang nomor SOP, kebijakan, statistik, angka, atau nama pejabat.\n\nATURAN JUDUL:\n- Judul WAJIB memuat benda atau gagasan nyata yang BENAR-BENAR dibahas di poin. Sebelum menyerahkan jawaban, baca ulang kelima poin Anda, lalu tanyakan: apakah judul ini menggambarkan isinya? Jika tidak, ganti judulnya.\n- Maksimal 6 kata, HURUF KAPITAL, menempel di kepala. Pakai kontras atau gambaran konkret.\n- DILARANG mengulang nama topik apa adanya.\n- DILARANG kata pengisi: 'PENTING', 'WASPADA', 'AWAS', 'PERHATIAN', 'TIPS'.\n- BAIK: 'PANEL LISTRIK BUKAN LEMARI', 'MONITOR TERLALU RENDAH, LEHER PEGAL', 'BUKU MUTASI KOSONG, JEJAK HILANG'.\n- BURUK: 'PENTING: KESELAMATAN INSTALASI LISTRIK' (kata pengisi + mengulang topik), 'RUANG PATROLI SATPAM TERLALU KOSONG' untuk materi tentang buku mutasi (judul tidak nyambung dengan poin).\n\nATURAN POIN:\n- KONSISTEN pada GAYA WAJIB. Kelima poin memakai gaya yang sama. DILARANG mencampur gaya lain.\n- Setiap poin KALIMAT UTUH (12-18 kata). DILARANG tanda panah atau dua kalimat ditempel jadi satu poin.\n- Kelima poin membahas hal BERBEDA, tidak tumpang tindih, tidak mengulang hook.\n- VARIASIKAN KATA PEMBUKA. DILARANG kelima poin dibuka dengan frasa yang persis sama.\n\nATURAN LAIN:\n- Konkret dan spesifik pada gedung kantor. Sebut benda dan tempatnya.\n- Ejaan baku (berisiko bukan beresiko; risiko bukan resiko).\n- DILARANG KERAS klise: 'tetap waspada', 'tanggung jawab bersama', 'mari kita jaga', 'demi keselamatan bersama', 'jangan lupa', 'sekecil apapun'.\n\nSELALU balas HANYA JSON valid. Tanpa markdown, tanpa penjelasan."
+            },
+            {
+              "content": "=PILAR      : {{ $json.pilar }}\nTOPIK      : {{ $json.topikTerpilih }}\nGAYA WAJIB : {{ $json.gayaTerpilih }}\n\nKELIMA poin memakai GAYA WAJIB di atas, tanpa dicampur gaya lain.\n\nBentuk kalimat per gaya:\n\n- CHECKLIST HARIAN → kalimat perintah yang ramah. Variasikan kata kerjanya: Periksa, Rapikan, Pastikan, Laporkan, Sediakan, Singkirkan, Ganti. Jangan mengulang kata kerja yang sama.\n\n- STUDI KASUS SINGKAT → hook WAJIB diawali 'Bayangkan:' atau 'Misalkan:'. Kelima poin adalah PELAJARAN yang ditarik dari skenario itu — BUKAN daftar perintah.\n  DILARANG KERAS mengawali poin dengan kata perintah (Periksa, Pastikan, Rapikan, Cek, Laporkan, Sediakan). Kalau poin Anda berbunyi seperti checklist, Anda salah gaya.\n  Pakai bentuk refleksi, contoh: 'Kesalahan pertama terjadi ketika ...', 'Yang luput di sini adalah ...', 'Akibatnya, petugas berikutnya ...', 'Andai catatan diisi lengkap, ...', 'Pelajaran yang bisa ditarik: ...'.\n\n- MITOS vs FAKTA → tiap poin membongkar satu anggapan keliru, dengan pembuka BERBEDA-BEDA. Rotasikan: 'Banyak yang mengira ... padahal ...', 'Ada anggapan bahwa ... kenyataannya ...', 'Sering terdengar ... nyatanya ...', 'Dikira ... justru ...', 'Terlihat sepele, tetapi ...'. DILARANG memakai 'Banyak yang mengira' lebih dari sekali.\n\n- DO & DON'T → tiap poin diawali 'Pastikan ...' atau 'Hindari ...'. Campur keduanya.\n\n- DAMPAK & KONSEKUENSI → tiap poin menyebut akibat nyata bila diabaikan, dari sudut BERBEDA-BEDA: siapa yang celaka, berapa biaya atau downtime-nya, kerusakan apa yang timbul, kekeliruan yang paling sering terjadi, hal yang luput diperhatikan. JANGAN kelimanya berbentuk 'X dapat menyebabkan Y'. Frasa 'dapat', 'berpotensi', 'berisiko' maksimal di 2 poin. Jangan tempel tindakan di poin.\n\nBalas JSON dengan urutan kunci PERSIS seperti ini — poin ditulis lebih dulu, judul menyusul setelahnya:\n{\n  \"poin\": [\"kalimat utuh 12-18 kata\", \"...\", \"...\", \"...\", \"...\"],\n  \"judul\": \"maks 6 kata, HURUF KAPITAL. WAJIB menggambarkan isi kelima poin di atas.\",\n  \"hook\": \"1-2 kalimat utuh (20-30 kata). Situasi umum atau akibat konkret. DILARANG menyiratkan insiden ini pernah benar-benar terjadi.\",\n  \"aksi\": \"1 ajakan yang benar-benar selesai dalam satu menit, di satu tempat, pada satu benda\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.9
+        }
+      },
+      "id": "2bdbd9d4-a156-4658-a738-474169439335",
+      "name": "Generate Materi Reminder",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        288
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "oa5aqEMnXyBNLiPa",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "materi-parsed",
+              "name": "materi",
+              "type": "object",
+              "value": "={{ JSON.parse($json.output[0].content[0].text.replace(/```json|```/g, \"\").trim()) }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6e3b6c16-59ed-4542-b40a-edadbd6e2058",
+      "name": "Parse Materi JSON",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fonnte.com/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "0dfb0122-343a-40a8-80a5-8d94f5f9e3ac",
+      "name": "Kirim Reminder ke WhatsApp Grup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "hQaA8F7KrcRLXEcx",
+          "name": "NVIDIA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Reminder Harian Facility Management → WhatsApp Grup\n\nTeks singkat, kirim tiap jam 9 pagi. Target: tuntas dibaca 30 detik.\n\n### 🔍 Mau intip topik lain? Pakai override\nDi node **`Konfigurasi`**, isi `overrideIndex` dengan angka:\n- `0-7`   → 🦺 Keselamatan Kerja\n- `8-15`  → 🩺 Kesehatan Kerja\n- `16-23` → 🛡️ Keamanan\n\nAngka itu juga menentukan gaya (angka % 5).\n**Kosongkan lagi** untuk kembali otomatis mengikuti tanggal.\n\n### 🔁 Rotasi anti-monoton\n**24 topik × 5 gaya** → kombinasi baru terulang tiap **120 hari**.\n\n☑️ Checklist Harian · • Studi Kasus · 🔎 Mitos vs Fakta\n• Do & Don't · ⚠️ Dampak & Konsekuensi\n\n### ⚠️ Pagar pengaman di prompt AI\n1. **DILARANG mengarang insiden.** AI tidak tahu apa yang benar-benar\n   terjadi di kantor. Frasa seperti \"beberapa karyawan sempat\n   terpeleset\" adalah kebohongan dan merusak kredibilitas.\n   Hanya gaya Studi Kasus yang boleh berandai, wajib diawali\n   \"Bayangkan:\" / \"Misalkan:\".\n2. **DILARANG mengarang** nomor SOP, kebijakan, statistik, nama pejabat.\n3. **Klise dilarang**: tetap waspada, tanggung jawab bersama,\n   mari kita jaga, jangan lupa, sekecil apapun.\n4. **Judul dilarang** memakai pengisi: PENTING, WASPADA, AWAS, TIPS.\n5. **Pembuka poin wajib bervariasi** — tidak boleh kelimanya sama.\n6. **Satu gaya per pesan** — tidak boleh dicampur.\n\n### 🔑 Yang bisa diubah\n**`Konfigurasi`** → Group ID Fonnte + override\n**`Pilih Topik Hari Ini`** → array `daftarTopik` & `daftarGaya`\n**`Susun Pesan`** → tata letak pesan WhatsApp\n\n### ⏸️ Belum terpasang\nBlok infografis IndonesiaBaik.id — menunggu endpoint API\n(situsnya JavaScript, tidak ada RSS/API publik).",
+        "height": 1012,
+        "width": 470,
+        "color": 4
+      },
+      "id": "f1c4970b-8ebe-4578-83c3-f8c7f1b466d3",
+      "name": "Sticky Note 12c6e21f",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "target-grup",
+              "name": "targetGrup",
+              "type": "string",
+              "value": "***@g.us"
+            },
+            {
+              "id": "override-index",
+              "name": "overrideIndex",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "f97d3c4b-0ea5-4a11-a7c7-722f06c47714",
+      "name": "Konfigurasi",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        304
+      ],
+      "notes": "Ganti modeKirim ke 'premium' setelah upgrade paket Fonnte"
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $('Parse Materi JSON').first().json.materi;\nconst info = $('Pilih Topik Hari Ini').first().json;\nconst cfg = $('Konfigurasi').first().json;\n\nconst ikonPilar = {\n  'KESELAMATAN KERJA': '🦺',\n  'KESEHATAN KERJA': '🩺',\n  'KEAMANAN': '🛡️'\n};\n\nconst ikonPoin = {\n  'CHECKLIST HARIAN': '☑️',\n  'STUDI KASUS SINGKAT': '•',\n  'MITOS vs FAKTA': '🔎',\n  \"DO & DON'T\": '•',\n  'DAMPAK & KONSEKUENSI': '⚠️'\n};\n\nconst rapiGaya = (s) => s.toLowerCase().replace(/(^|\\s)\\S/g, (c) => c.toUpperCase());\n\nconst b = ikonPoin[info.labelGaya] || '•';\nconst poin = (m.poin || []).map((p) => b + '  ' + p).join('\\n\\n');\n\nconst pesanFinal =\n  (ikonPilar[info.pilar] || '📌') + ' *' + info.pilar + '*  ·  ' + rapiGaya(info.labelGaya) + '\\n' +\n  info.tanggalHariIni + '\\n\\n' +\n  '*' + m.judul + '*\\n' +\n  m.hook + '\\n\\n' +\n  poin + '\\n\\n' +\n  '📌 ' + m.aksi;\n\nreturn [{ json: { targetGrup: cfg.targetGrup, pesanFinal } }];"
+      },
+      "id": "570fff3b-15c9-48f8-89d7-cf2c06a7d9e6",
+      "name": "Susun Pesan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatNvidia",
+      "typeVersion": 1,
+      "position": [
+        800,
+        592
+      ],
+      "id": "93dc23b4-03aa-428f-8c34-c98cd38ea902",
+      "name": "NVIDIA Nemotron Chat Model",
+      "credentials": {
+        "nvidiaApi": {
+          "id": "XehGGhFNwcJH8xeB",
+          "name": "NVIDIA Nemotron account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Pilih Topik Hari Ini": {
+      "main": [
+        [
+          {
+            "node": "Generate Materi Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setiap Hari Jam 9 Pagi": {
+      "main": [
+        [
+          {
+            "node": "Konfigurasi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konfigurasi": {
+      "main": [
+        [
+          {
+            "node": "Pilih Topik Hari Ini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Materi Reminder": {
+      "main": [
+        [
+          {
+            "node": "Parse Materi JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Materi JSON": {
+      "main": [
+        [
+          {
+            "node": "Susun Pesan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Susun Pesan": {
+      "main": [
+        [
+          {
+            "node": "Kirim Reminder ke WhatsApp Grup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Jakarta"
+  },
+  "staticData": {
+    "node:Setiap Hari Jam 9 Pagi": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true
+  }
+}

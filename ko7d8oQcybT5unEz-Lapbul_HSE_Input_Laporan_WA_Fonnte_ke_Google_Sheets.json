@@ -1,0 +1,693 @@
+{
+  "name": "Lapbul HSE - Input Laporan WA (Fonnte) ke Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lapbul-hse-fonnte",
+        "options": {}
+      },
+      "id": "a4b05e87-189b-420f-9d66-b9997a477715",
+      "name": "Webhook Fonnte",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "7dbce430-12cf-4958-98d3-82fc3c97ce75"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "pesan",
+              "type": "string",
+              "value": "={{ $json.body?.message ?? $json.message ?? \"\" }}"
+            },
+            {
+              "id": "a2",
+              "name": "grubId",
+              "type": "string",
+              "value": "={{ $json.body?.sender ?? $json.sender ?? \"\" }}"
+            },
+            {
+              "id": "a3",
+              "name": "pengirimNo",
+              "type": "string",
+              "value": "={{ $json.body?.member ?? $json.body?.memberlid ?? $json.member ?? \"\" }}"
+            },
+            {
+              "id": "a7",
+              "name": "pengirimLid",
+              "type": "string",
+              "value": "={{ $json.body?.memberlid ?? $json.memberlid ?? \"\" }}"
+            },
+            {
+              "id": "a4",
+              "name": "pengirimNama",
+              "type": "string",
+              "value": "={{ $json.body?.name ?? $json.body?.pushname ?? $json.name ?? \"\" }}"
+            },
+            {
+              "id": "a5",
+              "name": "linkFile",
+              "type": "string",
+              "value": "={{ $json.body?.url ?? $json.url ?? \"\" }}"
+            },
+            {
+              "id": "a6",
+              "name": "isGroup",
+              "type": "string",
+              "value": "={{ ($json.body?.isgroup ?? $json.isgroup ?? \"\").toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f54af647-b34c-4751-9541-c47809e875ba",
+      "name": "Normalisasi Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const GRUB_MAP = {\n  '***@g.us': 'Grub 1 - Regional',\n  'GANTI_ID_GRUB_AREA_LAIN@g.us': 'Grub 2 - Area Lain'\n};\n\nconst j = $input.item.json;\nconst pesan = (j.pesan || '').toString();\nconst t = pesan.toLowerCase();\nconst grub = GRUB_MAP[j.grubId] || '';\n\n// === AREA DETECTION ===\nlet area = '';\nif (t.includes('bukit siguntang') || t.includes('msc')) area = 'MSC Bukit Siguntang';\nelse if (t.includes('palembang')) area = 'Palembang';\nelse if (t.includes('lampung')) area = 'Lampung';\nelse if (t.includes('jambi')) area = 'Jambi';\nelse if (t.includes('bengkulu')) area = 'Bengkulu';\n\n// === KATEGORI DETECTION ===\nlet kategori = 'Lainnya';\nif (t.includes('safety talk') || t.includes('briefing')) kategori = 'Safety Talk/Briefing Pagi';\nelse if (t.includes('toolbox')) kategori = 'Safety Toolbox Meeting';\nelse if (t.includes('induction') || t.includes('induksi')) kategori = 'Safety Induction';\nelse if (t.includes('jsa') || t.includes('job safety')) kategori = 'JSA (Job Safety Analysis)';\nelse if (t.includes('hse message') || t.includes('pekerjaan hse')) kategori = 'Pekerjaan HSE/HSE Message';\nelse if (t.includes('sosialisasi') || t.includes('pelatihan')) kategori = 'Pelatihan & Sosialisasi';\nelse if (t.includes('patrol') || t.includes('patroli') || t.includes('inspeksi')) kategori = 'Inspeksi/Patrol K3';\nelse if (t.includes('kecelakaan') || t.includes('incident')) kategori = 'Incident Report';\n\n// === TANGGAL PARSING ===\nconst bulan = { januari: '01', februari: '02', maret: '03', april: '04', mei: '05', juni: '06', juli: '07', agustus: '08', september: '09', oktober: '10', november: '11', desember: '12' };\nlet tanggal = $now.toFormat('yyyy-MM-dd');\nconst m = pesan.match(/(\\d{1,2})[\\s\\/]+(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)[\\s\\/]+(\\d{4})/i);\nif (m) tanggal = m[3] + '-' + bulan[m[2].toLowerCase()] + '-' + m[1].padStart(2, '0');\n\n// === FIELD EXTRACTION ===\nfunction grabField(label, text) {\n  const patterns = [\n    new RegExp(label + '\\\\s*[:\\uff1a]\\\\s*([^\\n]+)', 'i'),\n    new RegExp(label + '\\\\s*([^\\n]+)', 'i')\n  ];\n  for (const p of patterns) {\n    const mm = text.match(p);\n    if (mm) return mm[1].trim().replace(/^[\\s\\-\\u2022]+|[\\s\\-\\u2022]+$/g, '').substring(0, 100);\n  }\n  return '';\n}\n\nconst lokasi = grabField('lokasi', pesan);\nconst vendor = grabField('(?:nama\\\\s+)?(?:vendor|perusahaan|pelaksana)', pesan);\nconst pengawas = grabField('pengawas(?:\\\\s+(?:area|site|lapangan))?', pesan);\n\n// === URAIAN SINGKAT (baris pertama, max 150 char) ===\nconst lines = pesan.split('\\n').filter(l => l.trim().length > 0);\nlet uraianSingkat = (lines[0] || '').replace(/[\\s]{2,}/g, ' ').trim().substring(0, 150);\nif (uraianSingkat.length < 10 && lines.length > 1) {\n  uraianSingkat = lines.slice(0, 2).join(' | ').replace(/[\\s]{2,}/g, ' ').trim().substring(0, 150);\n}\n\n// === VALIDASI KELENGKAPAN ===\nconst butuhVendor = ['JSA (Job Safety Analysis)', 'Safety Toolbox Meeting', 'Safety Induction'].includes(kategori);\nconst punyaPT = /\\b(pt|cv)\\.?\\s+\\S+/i.test(pesan);\nconst kurang = [];\nif (!m) kurang.push('Tanggal kegiatan (contoh: 08 Mei 2026)');\nif (butuhVendor && !vendor && !punyaPT) kurang.push('Nama perusahaan / vendor (PT / CV)');\nif (butuhVendor && !lokasi) kurang.push('Lokasi pekerjaan');\nconst lengkap = kurang.length === 0;\n\nlet balasan = '';\nif (lengkap) {\n  balasan = '\\u2705 *Laporan HSE Diterima*\\n\\nTerima kasih atas partisipasi Anda dalam menjaga keselamatan kerja.\\n\\ud83d\\ude4f *Safety First, Semua Pulang Selamat*';\n} else {\n  balasan = '\\u26a0\\ufe0f *Laporan HSE Kurang Lengkap*\\n\\nMohon periksa ulang dan kirim kembali laporan Anda. Bagian yang kurang:\\n- ' + kurang.join('\\n- ') + '\\n\\n\\ud83d\\ude4f *Safety First, Semua Pulang Selamat*';\n}\n\nreturn { json: {\n  valid: grub !== '',\n  lengkap: lengkap,\n  balasan: balasan,\n  balasTarget: j.grubId || '',\n  timestamp: $now.toFormat('yyyy-MM-dd HH:mm'),\n  tanggal: tanggal,\n  grub: grub,\n  area: area,\n  kategori: kategori,\n  uraian: uraianSingkat,\n  lokasi: lokasi,\n  vendor: vendor,\n  pengawas: pengawas,\n  pengirimNama: j.pengirimNama || '',\n  pengirimNo: j.pengirimNo || '',\n  pengirimLid: j.pengirimLid || '',\n  linkFile: j.linkFile || ''\n} };"
+      },
+      "id": "686bc41e-dfc7-4241-91ff-f32dcdbeeefd",
+      "name": "Parse Laporan HSE",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cek-valid",
+              "leftValue": "={{ $json.valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d1a7694e-8cdb-4d68-89a0-69f2f6ab102d",
+      "name": "Grub Terdaftar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14Pjd2hs1gsNNCaiSh9wbvEn9YgIZ8ExvufPdGX_szTM",
+          "mode": "list",
+          "cachedResultName": "Template_Lapbul_HSE_-_Database___Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14Pjd2hs1gsNNCaiSh9wbvEn9YgIZ8ExvufPdGX_szTM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 623512877,
+          "mode": "list",
+          "cachedResultName": "DB Laporan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15KGtyXhHvjt9ngzFy_1oYmwR0OoQy8Ved_toKH18Obs/edit#gid=623512877"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp Masuk": "={{ $json.timestamp }}",
+            "Tanggal Laporan": "={{ $json.tanggal }}",
+            "Grub WA": "={{ $json.grub }}",
+            "Area": "={{ $json.area }}",
+            "Uraian Laporan": "={{ $json.uraian }}",
+            "Kategori": "={{ $json.kategori }}",
+            "Lokasi": "={{ $json.lokasi }}",
+            "Vendor/Pelaksana": "={{ $json.vendor }}",
+            "Pengawas Area": "={{ $json.pengawas }}",
+            "Nama Pengirim": "={{ $json.pengirimNama }}",
+            "No. HP Pengirim": "={{ $json.pengirimNo }}",
+            "Link Foto/Dokumen": "={{ $json.linkFile }}",
+            "Status": "Valid"
+          },
+          "matchingColumns": [
+            "1 baris = 1 laporan masuk dari WhatsApp. Baris ditambahkan otomatis oleh workflow n8n. Jangan ubah urutan kolom."
+          ],
+          "schema": [
+            {
+              "id": "Timestamp Masuk",
+              "displayName": "Timestamp Masuk",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tanggal Laporan",
+              "displayName": "Tanggal Laporan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Grub WA",
+              "displayName": "Grub WA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Area",
+              "displayName": "Area",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kategori",
+              "displayName": "Kategori",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Uraian Laporan",
+              "displayName": "Uraian Laporan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lokasi",
+              "displayName": "Lokasi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vendor/Pelaksana",
+              "displayName": "Vendor/Pelaksana",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pengawas Area",
+              "displayName": "Pengawas Area",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nama Pengirim",
+              "displayName": "Nama Pengirim",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "No. HP Pengirim",
+              "displayName": "No. HP Pengirim",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Link Foto/Dokumen",
+              "displayName": "Link Foto/Dokumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4cc9358a-4769-4dfb-b0c6-2d0f3e18d8f4",
+      "name": "Simpan ke DB Laporan",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        160
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3ZzR213mMiISd0Mk",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "bb2acfac-f8b0-4ffa-ba3a-e7ff37f135a0",
+      "name": "Abaikan (Bukan Grub Laporan)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Setup\n1. GRUB ID: kirim pesan tes di masing-masing grub WA, buka execution workflow ini, lihat output node \"Webhook Fonnte\" pada field body.sender (untuk pesan grub, sender = ID grub, biasanya berakhiran @g.us). Salin ke GRUB_MAP di node \"Parse Laporan HSE\". Alternatif: dashboard Fonnte > menu Group.\n2. TOKEN FONNTE: kredensial \"Header Auth account\" harus berisi Name = Authorization, Value = token device Fonnte kamu. Dipakai node \"Kirim Konfirmasi Diterima\" & \"Balas Laporan Kurang Lengkap\".\n3. Aturan kelengkapan laporan ada di node \"Parse Laporan HSE\" (bagian VALIDASI KELENGKAPAN) - silakan sesuaikan.\n4. Node \"Simpan ke DB Laporan\": operation = Append, header tabel di baris 3 (options > Header Row). Jangan diubah ke Read/filter.\n5. Set URL webhook production di dashboard Fonnte (Device > Webhook), lalu publish workflow ini.",
+        "height": 816,
+        "width": 2104,
+        "color": 4
+      },
+      "id": "63258666-9490-4c04-9bc9-fca86e747596",
+      "name": "Sticky Note 1af0d362",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cek-lengkap",
+              "leftValue": "={{ $json.lengkap }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2737df1f-a557-4241-9126-1656a548369a",
+      "name": "Laporan Lengkap?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1136,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fonnte.com/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target",
+              "value": "={{ $('Parse Laporan HSE').item.json.balasTarget }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Parse Laporan HSE').item.json.balasan }}"
+            },
+            {
+              "name": "typing",
+              "value": "false"
+            },
+            {
+              "name": "countMedia",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f5ff5c18-8af3-452b-a969-5a406ad4b12a",
+      "name": "Kirim Konfirmasi Diterima",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1888,
+        288
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mJMDqY9UWv8nv5bK",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fonnte.com/send",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target",
+              "value": "={{ $('Parse Laporan HSE').item.json.balasTarget }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Parse Laporan HSE').item.json.balasan }}"
+            },
+            {
+              "name": "typing",
+              "value": "false"
+            },
+            {
+              "name": "countMedia",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d1c34819-7edc-4a30-9754-a971cf9e427c",
+      "name": "Balas Laporan Kurang Lengkap",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        560
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mJMDqY9UWv8nv5bK",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cek-jack-lid",
+              "leftValue": "={{ $json.pengirimLid }}",
+              "operator": {
+                "operation": "equals",
+                "singleValue": true,
+                "type": "string"
+              },
+              "rightValue": "104170824712231@lid"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-apakah-jack",
+      "name": "Apakah Jack?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1632,
+        160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-abaikan-konfirmasi",
+      "name": "Abaikan Konfirmasi (Jack Testing)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cek-jack-lid-error",
+              "leftValue": "={{ $json.pengirimLid }}",
+              "operator": {
+                "operation": "equals",
+                "singleValue": true,
+                "type": "string"
+              },
+              "rightValue": "104170824712231@lid"
+            }
+          ],
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          }
+        },
+        "options": {}
+      },
+      "id": "node-apakah-jack-error",
+      "name": "Apakah Jack (Error)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        448
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-abaikan-balasan",
+      "name": "Abaikan Balasan Error (Jack)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        320
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Fonnte": {
+      "main": [
+        [
+          {
+            "node": "Normalisasi Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisasi Payload": {
+      "main": [
+        [
+          {
+            "node": "Parse Laporan HSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Laporan HSE": {
+      "main": [
+        [
+          {
+            "node": "Grub Terdaftar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grub Terdaftar?": {
+      "main": [
+        [
+          {
+            "node": "Laporan Lengkap?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Abaikan (Bukan Grub Laporan)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Laporan Lengkap?": {
+      "main": [
+        [
+          {
+            "node": "Simpan ke DB Laporan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Apakah Jack (Error)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simpan ke DB Laporan": {
+      "main": [
+        [
+          {
+            "node": "Apakah Jack?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apakah Jack?": {
+      "main": [
+        [
+          {
+            "node": "Abaikan Konfirmasi (Jack Testing)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kirim Konfirmasi Diterima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apakah Jack (Error)?": {
+      "main": [
+        [
+          {
+            "node": "Abaikan Balasan Error (Jack)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Balas Laporan Kurang Lengkap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  }
+}
