@@ -1,32 +1,27 @@
 # Curriculum Vitae — Jack
-# Ringkas / 1 halaman
 
-Kontak / Contact
-- Indonesia (Palembang) | WhatsApp/Telegram: [isi]
-- Email: [isi] | GitHub: github.com/gacorauto4-tech/jack-automation-portfolio
-- LinkedIn: [isi]
+## Contact
+- Indonesia (Palembang) | WhatsApp / Telegram: [fill in]
+- Email: [fill in] | GitHub: github.com/gacorauto4-tech/jack-automation-portfolio
+- LinkedIn: [fill in]
 
-Ringkasan / Summary (ID)
-Pembuat otomasi no-code/low-code (n8n). Menghubungkan WhatsApp, Telegram,
-Google Sheets & AI jadi alur kerja otomatis. Otodidak.
-Summary (EN)
-No-code/low-code automation builder (n8n). I connect WhatsApp, Telegram,
-Google Sheets & AI into automated workflows. Self-taught.
+## Summary
+No-code / low-code automation builder (n8n). I connect WhatsApp, Telegram, Google Sheets
+and AI into automated workflows. Self-taught.
 
-Keahlian / Skills
-n8n · WhatsApp (Fonnte) · Telegram · Google Sheets · Groq/Gemini/OpenAI/Claude
+## Skills
+n8n · WhatsApp (Fonnte) · Telegram · Google Sheets · Groq / Gemini / OpenAI / Claude
 · OCR · Webhook · JavaScript Code · API integration
 
-Pengalaman / Experience
-Automation Builder — Freelance & Client (2024–sekarang)
-- LAPBULK3 HSE: laporan HSE 5 lokasi Sumatra (WA→Fonnte→n8n→Gemini→Sheets)
-- Reminder K3 harian ke WA grup (aktif)
-- COG intake laporan harian (Telegram→Sheets)
-- Cash Flow Dashboard V5 (rekap & alert budget)
+## Experience
+Automation Builder — Freelance & Client (2024–present)
+- LAPBULK3 HSE: HSE reporting across 5 Sumatra locations (WA → Fonnte → n8n → Gemini → Sheets)
+- Daily K3 reminder to WhatsApp group (active)
+- COG daily report intake (Telegram → Sheets)
+- Cash Flow Dashboard V5 (recap & budget alerts)
 
-Pendidikan / Education
-Otodidak — Tech & AI Automation (tanpa gelar IT formal)
+## Education
 Self-taught — Tech & AI Automation (no formal IT degree)
 
-Bahasa / Languages
+## Languages
 Bahasa Indonesia (native) · English (working)

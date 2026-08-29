@@ -1,103 +1,79 @@
-# Jack — Automation Portfolio (Selected / Terpilih)
-# Portofolio Otomasi — yang sudah dibangun & berjalan
+# Jack — Automation Portfolio (Selected)
 
-Pembuat otomasi no-code / low-code dengan n8n. Fokus: WhatsApp, Telegram,
-Google Sheets, dan AI (Groq, Gemini, OpenAI, Claude). Otodidak.
-No-code / low-code automation builder using n8n. Focus: WhatsApp, Telegram,
-Google Sheets, AI (Groq, Gemini, OpenAI, Claude). Self-taught.
+No-code / low-code automation builder using n8n. I connect WhatsApp, Telegram,
+Google Sheets, and AI (Groq, Gemini, OpenAI, Claude) into automated workflows that
+run real business processes. Self-taught.
 
 ---
 
-## Fungsi & Tujuan Portfolio Ini / Purpose
-Portfolio ini menunjukkan workflow otomasi nyata yang saya bangun: mengubah
-proses manual (catat laporan, kirim pesan, rekap keuangan) menjadi alur kerja
-otomatis yang jalan sendiri tanpa intervensi tiap hari.
+## Purpose of this portfolio
 This portfolio shows real automation workflows I built: turning manual processes
-(report logging, messaging, finance recap) into self-running workflows.
+(report logging, messaging, finance recap) into self-running workflows that operate
+without daily manual intervention.
 
 ---
 
-## 4 Proyek Terpilih / Selected Projects
+## Selected projects
 
-### 1. LAPBULK3 — Sistem Pelaporan HSE Lapangan
-**Fungsi:** WhatsApp grup → webhook Fonnte → n8n → parsing AI (Gemini) → Google Sheets.
-5 lokasi di Sumatra, balasan auto-konfirmasi. Routing: #LOG #JSA #KEGIATAN #SAFETYTALK.
-WhatsApp group → Fonnte webhook → n8n → AI parse (Gemini) → Google Sheets.
-5 Sumatra locations, auto-confirmation. Routing: #LOG #JSA #KEGIATAN #SAFETYTALK.
+### 1. LAPBULK3 — Multi-location HSE Reporting System
+**Flow:** WhatsApp group → Fonnte webhook → n8n → AI parsing (Gemini) → Google Sheets.
+5 locations across Sumatra, with auto-confirmation replies. Routing: #LOG #JSA #KEGIATAN #SAFETYTALK.
 
-- **Tujuan / Goal:** Catat laporan K3 (keselamatan kerja) dari lapangan secara
-  terpusat, tanpa form manual. / Centralize field K3 reports without manual forms.
-- **Manfaat / Benefit:** Laporan masuk otomatis ke 1 sheet, bisa dipantau dari mana saja.
-  / Reports auto-land in one sheet, monitorable anywhere.
-- **Yang diselesaikan / Solved:** Hilangnya laporan, data tersebar, input lambat.
-  / Lost reports, scattered data, slow input.
-- **Keuntungan bisnis / Business gain:** Audit K3 lebih mudah, risiko kecelakaan
-  kecili karena temuan cepat terekam. / Easier K3 audit, lower accident risk.
-- Status: dibangun & dijalankan / built & running
+- **Function:** Centralizes field K3 (workplace safety) reports from 5 sites into one sheet.
+- **Goal:** Capture safety reports without manual forms.
+- **Benefit:** Reports land automatically in a single sheet, monitorable from anywhere.
+- **Problem solved:** Lost reports, scattered data, slow input.
+- **Business gain:** Easier K3 audit, lower accident risk because findings are recorded fast.
+- Status: built & running
 
-### 2. Reminder Harian Facility Management → WhatsApp Grup
-**Fungsi:** Pesan K3 harian + berita + infografis, otomatis 1x sehari via Fonnte.
-Daily K3 message + news + infographic, auto 1x/day via Fonnte.
+### 2. Daily Facility Management Reminder → WhatsApp Group
+**Flow:** Daily K3 message + news + infographic, auto-sent 1x/day via Fonnte.
 
-- **Tujuan / Goal:** Bangun budaya safety harian lewat pengingat otomatis.
-  / Build daily safety culture via auto reminder.
-- **Manfaat / Benefit:** Karyawan dapat pesan edukasi tiap pagi tanpa admin kirim manual.
-  / Staff get daily edu message without manual admin send.
-- **Yang diselesaikan / Solved:** Pengingat sering lupa / tidak konsisten.
-  / Forgotten / inconsistent reminders.
-- **Keuntungan bisnis / Business gain:** Kesadaran K3 naik, admin hemat waktu.
-  / Higher K3 awareness, admin time saved.
-- Status: aktif & berjalan / active & running
+- **Function:** Sends a daily workplace-safety reminder to a WhatsApp group.
+- **Goal:** Build a daily safety culture via automated reminder.
+- **Benefit:** Staff get a daily educational message with no manual admin sending.
+- **Problem solved:** Forgotten / inconsistent reminders.
+- **Business gain:** Higher K3 awareness, admin time saved.
+- Status: active & running
 
-### 3. COG — Intake Laporan Harian via Telegram
-**Fungsi:** Terima laporan harian lewat Telegram → simpan ke Google Sheets.
-Receives daily reports via Telegram → stores to Google Sheets.
+### 3. COG — Daily Report Intake via Telegram
+**Flow:** Daily reports received via Telegram → stored to Google Sheets.
 
-- **Tujuan / Goal:** Kumpulkan laporan harian tim dari satu kanal chat.
-  / Collect team daily reports from one chat channel.
-- **Manfaat / Benefit:** Tidak perlu rekap email/WA manual, langsung jadi baris sheet.
-  / No manual email/WA recap, goes straight to sheet row.
-- **Yang diselesaikan / Solved:** Laporan tercecer di chat, susah ditarik.
-  / Reports lost in chat, hard to pull.
-- **Keuntungan bisnis / Business gain:** Manajemen dapat ringkasan harian instan.
-  / Management gets instant daily summary.
-- Status: dibangun & diuji / built & tested
+- **Function:** Collects team daily reports from one chat channel.
+- **Goal:** Gather daily reports without manual email/WA recap.
+- **Benefit:** Reports go straight to a sheet row, no manual consolidation.
+- **Problem solved:** Reports lost in chat, hard to pull later.
+- **Business gain:** Management gets an instant daily summary.
+- Status: built & tested
 
 ### 4. Cash Flow Daily Dashboard / CASHFLOW V5
-**Fungsi:** Dashboard keuangan harian dari Google Sheets: rekap, ringkasan, alert budget.
-Daily finance dashboard from Google Sheets: recap, summary, budget alerts.
+**Flow:** Daily finance dashboard from Google Sheets: recap, summary, budget alerts.
 
-- **Tujuan / Goal:** Pemilik usaha tahu posisi kas tiap hari tanpa buka buku manual.
-  / Owners see daily cash position without manual books.
-- **Manfaat / Benefit:** Rekap & alert budget otomatis, error input kecil.
-  / Auto recap & budget alerts, low input error.
-- **Yang diselesaikan / Solved:** Rekap keuangan lambat & rawan salah ketik.
-  / Slow & typo-prone finance recap.
-- **Keuntungan bisnis / Business gain:** Keputusan keuangan lebih cepat & akurat.
-  / Faster & more accurate finance decisions.
-- Status: dibuat & diuji (belum aktif produksi) / built & tested (not yet in production)
+- **Function:** Shows the daily cash position from a finance sheet.
+- **Goal:** Let the owner see cash position daily without manual books.
+- **Benefit:** Auto recap & budget alerts, low input error.
+- **Problem solved:** Slow and typo-prone finance recap.
+- **Business gain:** Faster and more accurate finance decisions.
+- Status: built & tested (not yet in production)
 
 ---
 
-## Tools / Alat
+## Tools
 n8n · WhatsApp (Fonnte) · Telegram · Google Sheets · Groq · Gemini · OpenAI · Claude · OCR · JavaScript Code
 
-## Note / Catatan
-Data sensitif (nomor WA, group ID, sheet ID, node ID) sudah di-redaksi menjadi ***
-di file JSON agar aman dipublikasikan.
-Sensitive data (WA numbers, group IDs, sheet IDs, node IDs) redacted to *** for safe publish.
+## Note
+Sensitive data (WhatsApp numbers, group IDs, sheet IDs, node IDs) is redacted to ***
+in the JSON files so the repo is safe to publish.
 
-=================================================================
-## REKOMENDASI AGAR PORTFOLIO LEBIH BAGUS & PROFESIONAL
-=================================================================
-1. Tambah README per-project (1 file tiap workflow) berisi screenshot alur + penjelasan
-   singkat. Employer suka lihat "visual", bukan cuma JSON.
-2. Buat 1 folder `demo/` berisi video 30 detik alur kerja jalan (loom/mp4) — nilai plus besar.
-3. Di LinkedIn, taruh link repo ini di "Featured" + tulis 1 post: "I built X with n8n".
-4. Pisahkan repo: 1 repo = 1 project (LAPBULK3 repo sendiri, Cashflow repo sendiri) biar
-   lebih rapi & gampang di-share ke klien tertentu.
-5. Tambah badge: "Built with n8n", "AI-powered" di README agar terlihat modern.
-6. Jangan klaim "Founder/Engineer" kalau bukan — posisi sebagai "Automation Builder"
-   lebih kredibel & aman.
-7. Update berkala: tiap selesai project baru, commit ke repo. Portfolio hidup = nilai tinggi.
-8. English konsisten di judul/section agar employer global paham (sudah dilakukan di sini).
+---
+
+## Tips to make this portfolio more professional
+1. Add a per-project README (1 file each) with a flow screenshot and short explanation.
+   Employers like visuals, not just JSON.
+2. Add a `demo/` folder with a 30-second screen recording of the workflow running.
+3. Put this repo link in your LinkedIn "Featured" section and write one post: "I built X with n8n".
+4. Split into separate repos (one project each) so you can share with specific clients.
+5. Add badges ("Built with n8n", "AI-powered") to the README.
+6. Don't claim "Founder/Engineer" if you're not — "Automation Builder" is more credible.
+7. Update regularly: commit a new project whenever you finish one. A live portfolio = high value.
+8. Keep English consistent in titles/sections so global employers understand.
